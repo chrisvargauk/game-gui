@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+</head>
+<body>
+<div id="ui-root"></div>
+<script src="../GameUI.js"></script>
+<script src="../Component.js"></script>
+<script>
+  var gui = new GameUI();
+  gui.init();
+
+  class MySubComp extends Component {
+    constructor () {
+      super();
+
+      this.setState({
+        ctr: 0
+      });
+    }
+
+    render ( dataFromParent ) {
+      return `
+        <fieldset class="sub-comp" ui-click="handlerUpdateLabel">
+          <legend>SubComp:</legend>
+          Timestamp changing at ReRendering: ${Date.now()} <br>
+          Click Me: ${this.getState().ctr} - dataFromParent(if any): ${dataFromParent}
+        </fieldset>
+      `;
+    }
+
+    // Ref in the DOM: <div ui-click="handlerUpdateLabel">
+    handlerUpdateLabel() {
+      this.setState({
+        ctr: this.getState().ctr + 1
+      })
+    }
+  }
+
+  class ParentComp extends Component {
+    constructor () {
+      super();
+
+      this.setState({
+        ctr: 0
+      });
+    }
+
+    render () {
+      return `
+        <div class="root-comp">
+          <div ui-click="handlerUpdateLabel">
+            Timestamp changing at ReRendering: ${Date.now()} <br>
+            Click Me: ${this.getState().ctr}
+          </div>
+
+          <br>
+          <b>SubComp receiving NO data from parent</b> - Doesn't ReRender when Parent Comp chaned
+          ${this.include(MySubComp)}
+
+          <b>SubComp receiving changing data from parent</b> - Rerenders when Parent Comp changed
+          ${this.include(MySubComp, this.getState().ctr)}
+
+          <b>SubComp receiving static data from parent</b> - Doesn't ReRender when Parent Comp chaned - Deep Diff
+          ${this.include(MySubComp, 'ImStaticTextPassedIn')}
+
+        </div>
+      `;
+    }
+
+    // Ref in the DOM: <div ui-click="handlerUpdateLabel">
+    handlerUpdateLabel() {
+      this.setState({
+        ctr: this.getState().ctr + 1
+      })
+    }
+  }
+
+  gui.regRootComp( ParentComp, '#ui-root');
+</script>
+
+  <br>
+  Important Behaviour (Rerender only when needed):
+  <ul>
+    <li>Click Main Comp to ReRerender it by updating it's state</li>
+    <li>We have tree instances of the same SubComp behaving differently</li>
+    <li>1st SubComp doesn't get rerendered (when Parent Comp is clicked) because no data passed in from ParentComp</li>
+    <li>2nd SubComp gets rerendered (when Parent Comp is clicked) because ctr passed in from ParentComp</li>
+    <li>3rd SubComp doesn't get rerendered (when Parent Comp is clicked) because same data passed in from ParentComp - Deep Diff on Data Passed In</li>
+  </ul>
+</body>
+</html>

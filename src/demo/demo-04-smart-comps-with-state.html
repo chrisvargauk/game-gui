@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+</head>
+<body>
+<div id="ui-root"></div>
+<script src="../GameUI.js"></script>
+<script src="../Component.js"></script>
+<script>
+  var gui = new GameUI();
+  gui.init();
+
+  class MySmartComp extends Component {
+    constructor () {
+      super();
+
+      this.setState({
+        ctr: 0
+      });
+    }
+
+    render () {
+      return `
+        <div class="root-comp">
+          <div ui-click="handlerUpdateLabel">
+            Click Me: ${this.getState().ctr}
+          </div>
+        </div>
+      `;
+    }
+
+    // Ref in the DOM: <div ui-click="handlerUpdateLabel">
+    handlerUpdateLabel() {
+      this.setState({
+        ctr: this.getState().ctr + 1
+      })
+    }
+  }
+
+  gui.regRootComp( MySmartComp, '#ui-root');
+</script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+{
+  "name": "game-gui",
+  "version": "1.0.0",
+  "description": "Yet another UI framework: fine-tuned for Game Development in the Browser. The 20% of modern UI frameworks that makes them great and NOT the 80% that makes them slow.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chrisvargauk/game-gui.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/chrisvargauk/game-gui/issues"
+  },
+  "homepage": "https://github.com/chrisvargauk/game-gui#readme"
+}

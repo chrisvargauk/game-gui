@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+</head>
+<body>
+<div id="ui-root"></div>
+<script src="../GameUI.js"></script>
+<script src="../Component.js"></script>
+<script>
+  var gui = new GameUI();
+  gui.init();
+
+  class MySmartComp extends Component {
+    render () {
+      return `
+        <div class="root-comp">
+          <button class="rendered-button">Hover Over Me!</button>
+        </div>
+      `;
+    }
+
+    // Built In Life Cycle Method
+    afterRender() {
+      document.querySelector('.rendered-button').addEventListener('mouseover', () => {
+        alert('You Hovered Over Me!');
+      }, false)
+    }
+  }
+
+  gui.regRootComp( MySmartComp, '#ui-root');
+</script>
+</body>
+</html>
