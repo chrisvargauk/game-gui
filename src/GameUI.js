@@ -72,3 +72,6 @@ var GameUI = function () {
   // Note: Instantiation is controlled by Game Engine
   // this.init();
 };
+
+export * from './Component';
+export default GameUI;

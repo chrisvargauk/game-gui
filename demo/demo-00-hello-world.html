@@ -6,13 +6,13 @@
 </head>
 <body>
 <div id="ui-root"></div>
-<script src="../GameUI.js"></script>
-<script src="../Component.js"></script>
+<script src="../dist/GameUI.js"></script>
+<script src="../dist/Component.js"></script>
 <script>
-  var gui = new GameUI();
+  var gui = new GameUI.default; // Excuse Webpack for ".default", you dont need it in your project
   gui.init();
 
-  class RootComp extends Component {
+  class RootComp extends Component.default {
     render () {
       return `
         <div class="root-comp">

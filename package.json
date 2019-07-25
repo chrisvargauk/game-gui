@@ -1,8 +1,11 @@
 {
   "name": "game-gui",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Yet another UI framework: fine-tuned for Game Development in the Browser. The 20% of modern UI frameworks that makes them great and NOT the 80% that makes them slow.",
   "main": "src/GameUI.js",
+  "scripts": {
+    "build-demo": "webpack --config webpack.config.demo.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/chrisvargauk/game-gui.git"
@@ -13,5 +16,9 @@
   "bugs": {
     "url": "https://github.com/chrisvargauk/game-gui/issues"
   },
-  "homepage": "https://github.com/chrisvargauk/game-gui#readme"
+  "homepage": "https://github.com/chrisvargauk/game-gui#readme",
+  "devDependencies": {
+    "webpack": "^4.37.0",
+    "webpack-cli": "^3.3.6"
+  }
 }
