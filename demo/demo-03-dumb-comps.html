@@ -17,12 +17,14 @@
 
   class RootComp extends Component.default {
     render () {
-      const list = ['haha', 'hehe', 'hihi'];
+      const list = ['foo', 'bar'];
 
       return `
         <div class="root-comp">
+          ${this.include(myDumbComp, 'Included Dumb Comp in HTML')}
+
           Rendering List:<br>
-          ${ list.map(item => myDumbComp(item))
+          ${ list.map(item => this.include(myDumbComp, item))
                  .join('')
           }
           </div>

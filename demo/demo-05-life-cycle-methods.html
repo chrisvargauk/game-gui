@@ -15,7 +15,7 @@
   class MySmartComp extends Component.default {
     render () {
       return `
-        <div class="root-comp">
+        <div class="my-smart-comp">
           <button class="rendered-button">Hover Over Me!</button>
         </div>
       `;
@@ -23,7 +23,7 @@
 
     // Built In Life Cycle Method
     afterRender() {
-      document.querySelector('.rendered-button').addEventListener('mouseover', () => {
+      this.dom.querySelector('.rendered-button').addEventListener('mouseover', () => {
         alert('You Hovered Over Me!');
       }, false)
     }

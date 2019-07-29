@@ -15,17 +15,19 @@
   class mySmartComp extends Component.default {
     render ( item ) {
       return `
-        <div class="dumb-comp">${item}</div>
+        <div class="my-smart-comp">${item}</div>
       `;
     }
   }
 
   class RootComp extends Component.default {
     render () {
-      const list = ['haha', 'hehe', 'hihi'];
+      const list = ['foo', 'bar'];
 
       return `
         <div class="root-comp">
+          ${this.include(mySmartComp, 'Included Smart Comp in HTML')}
+
           Rendering List:<br>
           ${ list.map(item => this.include(mySmartComp, item))
           .join('')
