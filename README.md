@@ -11,21 +11,19 @@ therefore you can align it with your Game Engines rendering cycle.
 
 ### Hellow World
 ```javascript
-import GameUI, {Component} from 'game-gui';
-const gui = new GameUI();
-gui.init();
+import GameGUI, {Component} from 'game-gui';
 
-class RootComp extends Component {
+class MyComp extends Component {
   render () {
     return `
-      <div class="root-comp">
+      <div class="my-comp">
         Hello World!
       </div>
     `;
   }
 }
 
-gui.regRootComp( RootComp, '#ui-root');
+const gui = new GameGUI(MyComp, '#ui-root');
 ```
 
 ### Mix HTML and Javascript

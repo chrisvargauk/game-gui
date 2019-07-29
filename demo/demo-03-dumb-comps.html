@@ -6,21 +6,18 @@
 </head>
 <body>
 <div id="ui-root"></div>
-<script src="../dist/GameUI.js"></script>
+<script src="../dist/GameGUI.js"></script>
 <script src="../dist/Component.js"></script>
 <script>
-  var gui = new GameUI.default();  // Excuse Webpack for ".default", you dont need it in your project
-  gui.init();
-
-  const myDumbComp = ( item ) =>
+ const myDumbComp = ( item ) =>
     (`<div class="dumb-comp">${item}</div>`);
 
-  class RootComp extends Component.default {
+  class MyComp extends Component.default { // Excuse Webpack for ".default", you dont need it in your project
     render () {
       const list = ['foo', 'bar'];
 
       return `
-        <div class="root-comp">
+        <div class="my-comp">
           ${this.include(myDumbComp, 'Included Dumb Comp in HTML')}
 
           Rendering List:<br>
@@ -32,7 +29,7 @@
     }
   }
 
-  gui.regRootComp( RootComp, '#ui-root');
+ const gui = new GameGUI.default(MyComp, '#ui-root');
 </script>
 </body>
 </html>

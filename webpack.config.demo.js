@@ -4,7 +4,7 @@ module.exports = {
 
   entry: {
     Component: './src/Component.js',
-    GameUI: './src/GameUI.js'
+    GameGUI: './src/GameGUI.js'
   },
 
   output: {

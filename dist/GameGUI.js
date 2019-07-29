@@ -1,4 +1,4 @@
-var GameUI =
+var GameGUI =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -82,7 +82,7 @@ var GameUI =
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "./src/GameUI.js");
+/******/ 	return __webpack_require__(__webpack_require__.s = "./src/GameGUI.js");
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -281,68 +281,58 @@ class Component {
 
 /***/ }),
 
-/***/ "./src/GameUI.js":
-/*!***********************!*\
-  !*** ./src/GameUI.js ***!
-  \***********************/
-/*! exports provided: Component, default */
+/***/ "./src/GameGUI.js":
+/*!************************!*\
+  !*** ./src/GameGUI.js ***!
+  \************************/
+/*! exports provided: GameGUI, Component, default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "GameGUI", function() { return GameGUI; });
 /* harmony import */ var _Component__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./Component */ "./src/Component.js");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Component", function() { return _Component__WEBPACK_IMPORTED_MODULE_0__["Component"]; });
 
-var GameUI = function () {
-  this.init = function (fps = 60) {
+class GameGUI {
+  constructor(RootComp, selectorGuiRoot, fps) {
+    // Reg Root Comp automatically if requirements are fulfilled
+    // Note: don't run it by default, you may want to control the steps.
+    if (typeof RootComp === 'undefined' ||
+        typeof selectorGuiRoot === 'undefined'
+    ) {
+      return;
+    }
+
+    this.init(fps);
+    this.regRootComp(RootComp, selectorGuiRoot);
+
+    // Call the very first render ASAP
+    // Note: Otherwise you might see a brief flash
+    this.render();
+  };
+
+  init(fps = 60) {
     this.isRenderingDue = false;
     this.listObjIdRenderingScheduled = {};
 
     // Note: Don't worry about calling render 60 times a sec,
     // render method start with "if(!this.isRenderingDue ) return;"
     this.tokenUiRender;
-    if ( typeof interval !== 'undefined') {
-      this.tokenUiRender = interval.setInterval( this.render.bind( this ), fps);
+    if (typeof interval !== 'undefined') {
+      this.tokenUiRender = interval.setInterval(this.render.bind(this), Math.floor(1000/fps));
     } else {
-      this.tokenUiRender = setInterval( this.render.bind( this ), fps);
+      this.tokenUiRender = setInterval(this.render.bind(this), Math.floor(1000/fps));
     }
-  };
+  }
 
-  this.scheduleRendering = function ( comp) {
-    this.isRenderingDue = true;
-
-    this.listObjIdRenderingScheduled[ comp.id ] = comp;
-  };
-
-  this.render = function () {
-    // Skipp rendering if there was no change
-    if ( !this.isRenderingDue ) {
-      return;
-    }
-
-    // this.rootComp.renderToHtmlAndDomify();
-
-    for (let idComp in this.listObjIdRenderingScheduled) {
-      let comp = this.listObjIdRenderingScheduled[ idComp ];
-
-      let dataFromParentPrev = typeof comp.dataFromParentAsStringPrev !== 'undefined' ?
-        JSON.parse(comp.dataFromParentAsStringPrev) :
-        undefined;
-
-      comp.renderToHtmlAndDomify( dataFromParentPrev );
-      delete this.listObjIdRenderingScheduled[ idComp ];
-    }
-
-    this.isRenderingDue = false;
-  };
-
-  this.regRootComp = function ( RootComp, selectorUiNativeRoot ) {
+  regRootComp (RootComp, selectorGuiRoot) {
     // Get UI Root
-    this.domRoot = document.querySelector( selectorUiNativeRoot);
+    this.domRoot = document.querySelector(selectorGuiRoot);
 
     // Skip if root DOM Element doesn't exist
-    if ( this.domRoot === null ) {
-      throw('ERROR: DOM Root can\'t be found by using the provided selector: '+selectorUiNativeRoot);
+    if (this.domRoot === null) {
+      throw('ERROR: DOM Root can\'t be found by using the provided selector: ' + selectorGuiRoot);
     }
 
     // Instantiate Root Comp
@@ -351,27 +341,48 @@ var GameUI = function () {
     // Hook up scheduler
     // Note: we dont want to pass in scheduler into comps, we want to keep comp contructior clean,
     //       therefore we do it here manually for Root Comp, and child comps are managed the same way.
-    this.rootComp.scheduleRendering = this.scheduleRendering.bind( this );
+    this.rootComp.scheduleRendering = this.scheduleRendering.bind(this);
 
     // Schedule render the very first time
-    this.rootComp.scheduleRendering( this.rootComp );
+    this.rootComp.scheduleRendering(this.rootComp);
 
     // Inject Root Comp into DOM
     this.domRoot.insertAdjacentElement('afterbegin', this.rootComp.dom);
   };
 
-  this.start = function () {
+  scheduleRendering (comp) {
+    this.isRenderingDue = true;
 
+    this.listObjIdRenderingScheduled[comp.id] = comp;
   };
 
-  // Note: Instantiation is controlled by Game Engine
-  // this.init();
-};
+  render () {
+    // Skipp rendering if there was no change
+    if (!this.isRenderingDue) {
+      return;
+    }
+
+    // this.rootComp.renderToHtmlAndDomify();
+
+    for (let idComp in this.listObjIdRenderingScheduled) {
+      let comp = this.listObjIdRenderingScheduled[idComp];
+
+      let dataFromParentPrev = typeof comp.dataFromParentAsStringPrev !== 'undefined' ?
+        JSON.parse(comp.dataFromParentAsStringPrev) :
+        undefined;
+
+      comp.renderToHtmlAndDomify(dataFromParentPrev);
+      delete this.listObjIdRenderingScheduled[idComp];
+    }
+
+    this.isRenderingDue = false;
+  };
+}
 
 
-/* harmony default export */ __webpack_exports__["default"] = (GameUI);
+/* harmony default export */ __webpack_exports__["default"] = (GameGUI);
 
 /***/ })
 
 /******/ });
-//# sourceMappingURL=GameUI.js.map
+//# sourceMappingURL=GameGUI.js.map

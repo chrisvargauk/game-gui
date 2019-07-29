@@ -6,12 +6,9 @@
 </head>
 <body>
 <div id="ui-root"></div>
-<script src="../dist/GameUI.js"></script>
+<script src="../dist/GameGUI.js"></script>
 <script src="../dist/Component.js"></script>
 <script>
-  var gui = new GameUI.default();  // Excuse Webpack for ".default", you dont need it in your project
-  gui.init();
-
   class mySmartComp extends Component.default {
     render ( item ) {
       return `
@@ -20,7 +17,7 @@
     }
   }
 
-  class RootComp extends Component.default {
+  class RootComp extends Component.default { // Excuse Webpack for ".default", you dont need it in your project
     render () {
       const list = ['foo', 'bar'];
 
@@ -37,7 +34,7 @@
     }
   }
 
-  gui.regRootComp( RootComp, '#ui-root');
+  const gui = new GameGUI.default(RootComp, '#ui-root');
 </script>
 </body>
 </html>
