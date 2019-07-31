@@ -1,10 +1,10 @@
 {
   "name": "game-gui",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Yet another UI framework: fine-tuned for Game Development in the Browser. The 20% of modern UI frameworks that makes them great and NOT the 80% that makes them slow.",
-  "main": "src/GameGUI.js",
+  "main": "dist/GameGUI.js",
   "scripts": {
-    "build-demo": "webpack --config webpack.config.demo.js"
+    "build": "webpack --config webpack.config.js"
   },
   "repository": {
     "type": "git",

@@ -7,9 +7,8 @@
 <body>
 <div id="ui-root"></div>
 <script src="../dist/GameGUI.js"></script>
-<script src="../dist/Component.js"></script>
 <script>
-  class mySmartComp extends Component.default {
+  class MySmartComp extends GameGUI.Component {
     render ( item ) {
       return `
         <div class="my-smart-comp">${item}</div>
@@ -17,16 +16,16 @@
     }
   }
 
-  class RootComp extends Component.default { // Excuse Webpack for ".default", you dont need it in your project
+  class RootComp extends GameGUI.Component {
     render () {
       const list = ['foo', 'bar'];
 
       return `
         <div class="root-comp">
-          ${this.include(mySmartComp, 'Included Smart Comp in HTML')}
+          ${this.include(MySmartComp, 'Included Smart Comp in HTML')}
 
           Rendering List:<br>
-          ${ list.map(item => this.include(mySmartComp, item))
+          ${ list.map(item => this.include(MySmartComp, item))
           .join('')
           }
         </div>

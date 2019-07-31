@@ -7,21 +7,20 @@
 <body>
 <div id="ui-root"></div>
 <script src="../dist/GameGUI.js"></script>
-<script src="../dist/Component.js"></script>
 <script>
- const myDumbComp = ( item ) =>
+ const MyDumbComp = ( item ) =>
     (`<div class="dumb-comp">${item}</div>`);
 
-  class MyComp extends Component.default { // Excuse Webpack for ".default", you dont need it in your project
+  class MyComp extends GameGUI.Component {
     render () {
       const list = ['foo', 'bar'];
 
       return `
         <div class="my-comp">
-          ${this.include(myDumbComp, 'Included Dumb Comp in HTML')}
+          ${this.include(MyDumbComp, 'Included Dumb Comp in HTML')}
 
           Rendering List:<br>
-          ${ list.map(item => this.include(myDumbComp, item))
+          ${ list.map(item => this.include(MyDumbComp, item))
                  .join('')
           }
           </div>

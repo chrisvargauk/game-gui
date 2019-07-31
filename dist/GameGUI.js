@@ -1,5 +1,14 @@
-var GameGUI =
-/******/ (function(modules) { // webpackBootstrap
+(function webpackUniversalModuleDefinition(root, factory) {
+	if(typeof exports === 'object' && typeof module === 'object')
+		module.exports = factory();
+	else if(typeof define === 'function' && define.amd)
+		define([], factory);
+	else if(typeof exports === 'object')
+		exports["GameGUI"] = factory();
+	else
+		root["GameGUI"] = factory();
+})(window, function() {
+return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
 /******/
@@ -285,7 +294,7 @@ class Component {
 /*!************************!*\
   !*** ./src/GameGUI.js ***!
   \************************/
-/*! exports provided: GameGUI, Component, default */
+/*! exports provided: GameGUI, default, Component */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -385,4 +394,5 @@ class GameGUI {
 /***/ })
 
 /******/ });
+});
 //# sourceMappingURL=GameGUI.js.map

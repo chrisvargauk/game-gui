@@ -7,9 +7,8 @@
 <body>
 <div id="ui-root"></div>
 <script src="../dist/GameGUI.js"></script>
-<script src="../dist/Component.js"></script>
 <script>
-  class MyComp extends Component.default { // Excuse Webpack for ".default", you dont need it in your project
+  class MyComp extends GameGUI.Component {
     render () {
       const list = ['foo', 'bar'];
 

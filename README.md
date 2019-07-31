@@ -9,7 +9,7 @@ do what ever you want, just don't blame me for anything ;)
 You can control when your rendering takes place, 
 therefore you can align it with your Game Engines rendering cycle.
 
-### Hellow World
+### Hello World
 ```javascript
 import GameGUI, {Component} from 'game-gui';
 
@@ -71,7 +71,7 @@ class MyComp extends Component {
 Use Dumb Components for modularizing simple UI elements that doesn't require their own sate.  
 Include Smart or Dumb Components inside each-other or use them inside iterators.
 ```javascript
-const myDumbComp = ( item ) =>
+const MyDumbComp = ( item ) =>
   (`<div class="dumb-comp">${item}</div>`);
 
 class MyComp extends Component {
@@ -80,10 +80,10 @@ class MyComp extends Component {
 
     return `
       <div class="my-comp">
-        ${this.include(myDumbComp, 'Included Dumb Comp in HTML')}
+        ${this.include(MyDumbComp, 'Included Dumb Comp in HTML')}
 
         Rendering List:<br>
-        ${ list.map(item => this.include(myDumbComp, item))
+        ${ list.map(item => this.include(MyDumbComp, item))
                .join('')
         }
         </div>
@@ -144,3 +144,10 @@ class MySmartComp extends Component {
   }
 }
 ```
+
+### ES6, CJS, AMD, UMD
+dist/GameGUI is built with UMD, therefore you are free to chose what module definition you prefer to use in 
+your own project.
+
+# Contribute
+https://github.com/chrisvargauk/game-gui

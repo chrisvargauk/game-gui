@@ -7,9 +7,8 @@
 <body>
 <div id="ui-root"></div>
 <script src="../dist/GameGUI.js"></script>
-<script src="../dist/Component.js"></script>
 <script>
-  class MySubComp extends Component.default { // Excuse Webpack for ".default", you dont need it in your project
+  class MySubComp extends GameGUI.Component {
     constructor () {
       super();
 
@@ -36,7 +35,7 @@
     }
   }
 
-  class ParentComp extends Component.default {
+  class ParentComp extends GameGUI.Component {
     constructor () {
       super();
 
