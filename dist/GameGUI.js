@@ -107,7 +107,8 @@ return /******/ (function(modules) { // webpackBootstrap
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Component", function() { return Component; });
 class Component {
-  constructor () {
+  constructor (option) {
+    this.option                     = option;
     this.id                         = Date.now() + '-' + Math.random();
     this.listObjCompChild           = {};
     this.html                       = '';
@@ -236,7 +237,7 @@ class Component {
 
       // Create new instance of Comp only if it hasn't been created yet
       if ( typeof compChild === 'undefined' ) {
-        compChild = this.listObjCompChild[ this.ctrChild ] = new ClassComp();
+        compChild = this.listObjCompChild[ this.ctrChild ] = new ClassComp( this.option );
 
         // Hook up scheduler
         // Note: make sure you dont bind this, you need scheduler to resolve to ui framework,
@@ -249,9 +250,9 @@ class Component {
 
       return `<div class="comp-placeholder" type="${nameComp}" ctr-child="${this.ctrChild}"></div>`;
 
-      // If Dumb Comp (Function)
+    // If Dumb Comp (Function)
     } else {
-      return ClassComp( dataFromParent );
+      return ClassComp( dataFromParent, this.option );
     }
   };
 
@@ -304,7 +305,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Component", function() { return _Component__WEBPACK_IMPORTED_MODULE_0__["Component"]; });
 
 class GameGUI {
-  constructor(RootComp, selectorGuiRoot, fps) {
+  constructor(RootComp, selectorGuiRoot, option) {
     // Reg Root Comp automatically if requirements are fulfilled
     // Note: don't run it by default, you may want to control the steps.
     if (typeof RootComp === 'undefined' ||
@@ -313,7 +314,7 @@ class GameGUI {
       return;
     }
 
-    this.init(fps);
+    this.init(option);
     this.regRootComp(RootComp, selectorGuiRoot);
 
     // Call the very first render ASAP
@@ -321,7 +322,16 @@ class GameGUI {
     this.render();
   };
 
-  init(fps = 60) {
+  init(option = {}) {
+    this.optionDefault = {
+      fps: 60,
+    };
+
+    this.option = {
+      ...this.optionDefault,
+      ...option,
+    };
+
     this.isRenderingDue = false;
     this.listObjIdRenderingScheduled = {};
 
@@ -329,9 +339,9 @@ class GameGUI {
     // render method start with "if(!this.isRenderingDue ) return;"
     this.tokenUiRender;
     if (typeof interval !== 'undefined') {
-      this.tokenUiRender = interval.setInterval(this.render.bind(this), Math.floor(1000/fps));
+      this.tokenUiRender = interval.setInterval(this.render.bind(this), Math.floor(1000/this.option.fps));
     } else {
-      this.tokenUiRender = setInterval(this.render.bind(this), Math.floor(1000/fps));
+      this.tokenUiRender = setInterval(this.render.bind(this), Math.floor(1000/this.option.fps));
     }
   }
 
@@ -345,7 +355,7 @@ class GameGUI {
     }
 
     // Instantiate Root Comp
-    this.rootComp = new RootComp();
+    this.rootComp = new RootComp( this.option );
 
     // Hook up scheduler
     // Note: we dont want to pass in scheduler into comps, we want to keep comp contructior clean,

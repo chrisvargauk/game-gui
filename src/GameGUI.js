@@ -1,5 +1,5 @@
 export class GameGUI {
-  constructor(RootComp, selectorGuiRoot, fps) {
+  constructor(RootComp, selectorGuiRoot, option) {
     // Reg Root Comp automatically if requirements are fulfilled
     // Note: don't run it by default, you may want to control the steps.
     if (typeof RootComp === 'undefined' ||
@@ -8,7 +8,7 @@ export class GameGUI {
       return;
     }
 
-    this.init(fps);
+    this.init(option);
     this.regRootComp(RootComp, selectorGuiRoot);
 
     // Call the very first render ASAP
@@ -16,7 +16,16 @@ export class GameGUI {
     this.render();
   };
 
-  init(fps = 60) {
+  init(option = {}) {
+    this.optionDefault = {
+      fps: 60,
+    };
+
+    this.option = {
+      ...this.optionDefault,
+      ...option,
+    };
+
     this.isRenderingDue = false;
     this.listObjIdRenderingScheduled = {};
 
@@ -24,9 +33,9 @@ export class GameGUI {
     // render method start with "if(!this.isRenderingDue ) return;"
     this.tokenUiRender;
     if (typeof interval !== 'undefined') {
-      this.tokenUiRender = interval.setInterval(this.render.bind(this), Math.floor(1000/fps));
+      this.tokenUiRender = interval.setInterval(this.render.bind(this), Math.floor(1000/this.option.fps));
     } else {
-      this.tokenUiRender = setInterval(this.render.bind(this), Math.floor(1000/fps));
+      this.tokenUiRender = setInterval(this.render.bind(this), Math.floor(1000/this.option.fps));
     }
   }
 
@@ -40,7 +49,7 @@ export class GameGUI {
     }
 
     // Instantiate Root Comp
-    this.rootComp = new RootComp();
+    this.rootComp = new RootComp( this.option );
 
     // Hook up scheduler
     // Note: we dont want to pass in scheduler into comps, we want to keep comp contructior clean,

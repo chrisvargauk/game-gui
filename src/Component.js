@@ -1,5 +1,6 @@
 export class Component {
-  constructor () {
+  constructor (option) {
+    this.option                     = option;
     this.id                         = Date.now() + '-' + Math.random();
     this.listObjCompChild           = {};
     this.html                       = '';
@@ -128,7 +129,7 @@ export class Component {
 
       // Create new instance of Comp only if it hasn't been created yet
       if ( typeof compChild === 'undefined' ) {
-        compChild = this.listObjCompChild[ this.ctrChild ] = new ClassComp();
+        compChild = this.listObjCompChild[ this.ctrChild ] = new ClassComp( this.option );
 
         // Hook up scheduler
         // Note: make sure you dont bind this, you need scheduler to resolve to ui framework,
@@ -141,9 +142,9 @@ export class Component {
 
       return `<div class="comp-placeholder" type="${nameComp}" ctr-child="${this.ctrChild}"></div>`;
 
-      // If Dumb Comp (Function)
+    // If Dumb Comp (Function)
     } else {
-      return ClassComp( dataFromParent );
+      return ClassComp( dataFromParent, this.option );
     }
   };
 

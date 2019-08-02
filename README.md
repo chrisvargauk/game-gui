@@ -44,7 +44,7 @@ class MyComp extends Component {
 }
 ```
 
-### Click Handler - Built int Handlers
+### Click Handler - Built in Handlers
 Built in handlers will be binded automatically when rendering is complete.  
 Note: See Life-cycle section for manual binding. 
 ```html
