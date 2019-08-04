@@ -107,9 +107,11 @@ return /******/ (function(modules) { // webpackBootstrap
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Component", function() { return Component; });
 class Component {
-  constructor (option) {
+  constructor ( option, config = {}) {
     this.option                     = option;
-    this.id                         = Date.now() + '-' + Math.random();
+    this.config                     = config;
+    this.id                         = typeof config.id !== 'undefined' ? config.id : Date.now() + '-' + Math.random();
+    this.type                       = Object.getPrototypeOf(this).constructor.name;
     this.listObjCompChild           = {};
     this.html                       = '';
     this.dom                        = document.createElement('div');
@@ -228,7 +230,7 @@ class Component {
     }
   };
 
-  include ( ClassComp, dataFromParent ) {
+  include ( ClassComp, dataFromParent, config ) {
     // If Smart Comp (Class)
     if ( Function.prototype.toString.call(ClassComp).indexOf('class') === 0 ) {
       this.ctrChild++;
@@ -237,13 +239,19 @@ class Component {
 
       // Create new instance of Comp only if it hasn't been created yet
       if ( typeof compChild === 'undefined' ) {
-        compChild = this.listObjCompChild[ this.ctrChild ] = new ClassComp( this.option );
+        compChild = this.listObjCompChild[ this.ctrChild ] = new ClassComp( this.option, config );
 
-        // Hook up scheduler
+        // Hook up Game GUI Methods: scheduler, indexComp
         // Note: make sure you dont bind this, you need scheduler to resolve to ui framework,
-        //       and not to comp instance
+        //       and not to comp instance.
+        //       These hooked up methods wont be called at constructon time,
+        //       therefore there is no problem hooking them up after Comp Instantiation.
         compChild.scheduleRendering = this.scheduleRendering;
-        compChild.scheduleRendering( this );
+        compChild.indexComp         = this.indexComp;
+
+        // Index Comp right after its created and even before its rendered.
+        // Note: The rendering of Root Comp will trigger the indexing of all Sub Comps.
+        this.indexComp( compChild );
       }
 
       compChild.renderToHtmlAndDomify( dataFromParent );
@@ -318,7 +326,10 @@ class GameGUI {
     this.regRootComp(RootComp, selectorGuiRoot);
 
     // Call the very first render ASAP
-    // Note: Otherwise you might see a brief flash
+    // Note:  Otherwise you might see a brief flash
+    //        Running render in the constructor means, all includes will be called recursively,
+    //        therefore all Comp / SubC omp Instantiation will happen sequentially when Game GUI is Instantiated.
+    //        That said, all Comps are indexed and ready to be accessed right after Game GUI Instantiation.
     this.render();
   };
 
@@ -334,6 +345,10 @@ class GameGUI {
 
     this.isRenderingDue = false;
     this.listObjIdRenderingScheduled = {};
+
+    // Indexed list of all rendered Comps
+    this.listObjTypeComp = {};
+    this.listObjIdComp = {};
 
     // Note: Don't worry about calling render 60 times a sec,
     // render method start with "if(!this.isRenderingDue ) return;"
@@ -357,21 +372,25 @@ class GameGUI {
     // Instantiate Root Comp
     this.rootComp = new RootComp( this.option );
 
-    // Hook up scheduler
-    // Note: we dont want to pass in scheduler into comps, we want to keep comp contructior clean,
+    // Hook up Game GUI Methods: scheduler, indexComp
+    // Note: we dont want to pass in scheduler into comps, we want to keep comp constructor clean,
     //       therefore we do it here manually for Root Comp, and child comps are managed the same way.
-    this.rootComp.scheduleRendering = this.scheduleRendering.bind(this);
+    this.rootComp.scheduleRendering = this.scheduleRendering.bind( this );
+    this.rootComp.indexComp         = this.indexComp.bind( this );
+
+    // Index Root Comp
+    // Root Comp is an Instance of Component, therefore it is indexed the same way as every other Comp Inst.
+    this.indexComp( this.rootComp );
 
     // Schedule render the very first time
-    this.rootComp.scheduleRendering(this.rootComp);
+    this.rootComp.scheduleRendering( this.rootComp );
 
     // Inject Root Comp into DOM
-    this.domRoot.insertAdjacentElement('afterbegin', this.rootComp.dom);
+    this.domRoot.insertAdjacentElement( 'afterbegin', this.rootComp.dom );
   };
 
   scheduleRendering (comp) {
     this.isRenderingDue = true;
-
     this.listObjIdRenderingScheduled[comp.id] = comp;
   };
 
@@ -384,18 +403,40 @@ class GameGUI {
     // this.rootComp.renderToHtmlAndDomify();
 
     for (let idComp in this.listObjIdRenderingScheduled) {
-      let comp = this.listObjIdRenderingScheduled[idComp];
+      let comp = this.listObjIdRenderingScheduled[ idComp ];
 
       let dataFromParentPrev = typeof comp.dataFromParentAsStringPrev !== 'undefined' ?
-        JSON.parse(comp.dataFromParentAsStringPrev) :
+        JSON.parse( comp.dataFromParentAsStringPrev ) :
         undefined;
 
-      comp.renderToHtmlAndDomify(dataFromParentPrev);
-      delete this.listObjIdRenderingScheduled[idComp];
+      comp.renderToHtmlAndDomify( dataFromParentPrev );
+      delete this.listObjIdRenderingScheduled[ idComp ];
     }
 
     this.isRenderingDue = false;
   };
+
+  indexComp( comp ) {
+    // Index Comps by Type
+    this.listObjTypeComp[ comp.type ] = this.listObjTypeComp[ comp.type ] || [];
+    this.listObjTypeComp[ comp.type ].push( comp );
+
+    // Check for Duplicate Comp ID
+    if (this.listObjIdComp[ comp.id ]) {
+      throw `Duplicate Comp ID is not allowed. Comp Type "${comp.type}", ID in question: ${comp.id}`;
+    }
+
+    // Index Comps by ID
+    this.listObjIdComp[ comp.id ] = comp;
+  };
+
+  getCompByType ( type ) {
+    return this.listObjTypeComp[ type ];
+  }
+
+  getCompById ( id ) {
+    return this.listObjIdComp[ id ];
+  }
 }
 
 

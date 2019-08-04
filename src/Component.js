@@ -1,7 +1,9 @@
 export class Component {
-  constructor (option) {
+  constructor ( option, config = {}) {
     this.option                     = option;
-    this.id                         = Date.now() + '-' + Math.random();
+    this.config                     = config;
+    this.id                         = typeof config.id !== 'undefined' ? config.id : Date.now() + '-' + Math.random();
+    this.type                       = Object.getPrototypeOf(this).constructor.name;
     this.listObjCompChild           = {};
     this.html                       = '';
     this.dom                        = document.createElement('div');
@@ -120,7 +122,7 @@ export class Component {
     }
   };
 
-  include ( ClassComp, dataFromParent ) {
+  include ( ClassComp, dataFromParent, config ) {
     // If Smart Comp (Class)
     if ( Function.prototype.toString.call(ClassComp).indexOf('class') === 0 ) {
       this.ctrChild++;
@@ -129,13 +131,19 @@ export class Component {
 
       // Create new instance of Comp only if it hasn't been created yet
       if ( typeof compChild === 'undefined' ) {
-        compChild = this.listObjCompChild[ this.ctrChild ] = new ClassComp( this.option );
+        compChild = this.listObjCompChild[ this.ctrChild ] = new ClassComp( this.option, config );
 
-        // Hook up scheduler
+        // Hook up Game GUI Methods: scheduler, indexComp
         // Note: make sure you dont bind this, you need scheduler to resolve to ui framework,
-        //       and not to comp instance
+        //       and not to comp instance.
+        //       These hooked up methods wont be called at constructon time,
+        //       therefore there is no problem hooking them up after Comp Instantiation.
         compChild.scheduleRendering = this.scheduleRendering;
-        compChild.scheduleRendering( this );
+        compChild.indexComp         = this.indexComp;
+
+        // Index Comp right after its created and even before its rendered.
+        // Note: The rendering of Root Comp will trigger the indexing of all Sub Comps.
+        this.indexComp( compChild );
       }
 
       compChild.renderToHtmlAndDomify( dataFromParent );

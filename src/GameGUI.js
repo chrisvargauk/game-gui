@@ -12,7 +12,10 @@ export class GameGUI {
     this.regRootComp(RootComp, selectorGuiRoot);
 
     // Call the very first render ASAP
-    // Note: Otherwise you might see a brief flash
+    // Note:  Otherwise you might see a brief flash
+    //        Running render in the constructor means, all includes will be called recursively,
+    //        therefore all Comp / SubC omp Instantiation will happen sequentially when Game GUI is Instantiated.
+    //        That said, all Comps are indexed and ready to be accessed right after Game GUI Instantiation.
     this.render();
   };
 
@@ -28,6 +31,10 @@ export class GameGUI {
 
     this.isRenderingDue = false;
     this.listObjIdRenderingScheduled = {};
+
+    // Indexed list of all rendered Comps
+    this.listObjTypeComp = {};
+    this.listObjIdComp = {};
 
     // Note: Don't worry about calling render 60 times a sec,
     // render method start with "if(!this.isRenderingDue ) return;"
@@ -51,21 +58,25 @@ export class GameGUI {
     // Instantiate Root Comp
     this.rootComp = new RootComp( this.option );
 
-    // Hook up scheduler
-    // Note: we dont want to pass in scheduler into comps, we want to keep comp contructior clean,
+    // Hook up Game GUI Methods: scheduler, indexComp
+    // Note: we dont want to pass in scheduler into comps, we want to keep comp constructor clean,
     //       therefore we do it here manually for Root Comp, and child comps are managed the same way.
-    this.rootComp.scheduleRendering = this.scheduleRendering.bind(this);
+    this.rootComp.scheduleRendering = this.scheduleRendering.bind( this );
+    this.rootComp.indexComp         = this.indexComp.bind( this );
+
+    // Index Root Comp
+    // Root Comp is an Instance of Component, therefore it is indexed the same way as every other Comp Inst.
+    this.indexComp( this.rootComp );
 
     // Schedule render the very first time
-    this.rootComp.scheduleRendering(this.rootComp);
+    this.rootComp.scheduleRendering( this.rootComp );
 
     // Inject Root Comp into DOM
-    this.domRoot.insertAdjacentElement('afterbegin', this.rootComp.dom);
+    this.domRoot.insertAdjacentElement( 'afterbegin', this.rootComp.dom );
   };
 
   scheduleRendering (comp) {
     this.isRenderingDue = true;
-
     this.listObjIdRenderingScheduled[comp.id] = comp;
   };
 
@@ -78,18 +89,40 @@ export class GameGUI {
     // this.rootComp.renderToHtmlAndDomify();
 
     for (let idComp in this.listObjIdRenderingScheduled) {
-      let comp = this.listObjIdRenderingScheduled[idComp];
+      let comp = this.listObjIdRenderingScheduled[ idComp ];
 
       let dataFromParentPrev = typeof comp.dataFromParentAsStringPrev !== 'undefined' ?
-        JSON.parse(comp.dataFromParentAsStringPrev) :
+        JSON.parse( comp.dataFromParentAsStringPrev ) :
         undefined;
 
-      comp.renderToHtmlAndDomify(dataFromParentPrev);
-      delete this.listObjIdRenderingScheduled[idComp];
+      comp.renderToHtmlAndDomify( dataFromParentPrev );
+      delete this.listObjIdRenderingScheduled[ idComp ];
     }
 
     this.isRenderingDue = false;
   };
+
+  indexComp( comp ) {
+    // Index Comps by Type
+    this.listObjTypeComp[ comp.type ] = this.listObjTypeComp[ comp.type ] || [];
+    this.listObjTypeComp[ comp.type ].push( comp );
+
+    // Check for Duplicate Comp ID
+    if (this.listObjIdComp[ comp.id ]) {
+      throw `Duplicate Comp ID is not allowed. Comp Type "${comp.type}", ID in question: ${comp.id}`;
+    }
+
+    // Index Comps by ID
+    this.listObjIdComp[ comp.id ] = comp;
+  };
+
+  getCompByType ( type ) {
+    return this.listObjTypeComp[ type ];
+  }
+
+  getCompById ( id ) {
+    return this.listObjIdComp[ id ];
+  }
 }
 
 export * from './Component';

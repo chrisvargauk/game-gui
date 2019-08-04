@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+</head>
+<body>
+<div id="ui-root"></div>
+<script src="../dist/GameGUI.js"></script>
+<script>
+  class MySubComp extends GameGUI.Component {
+    constructor (option, config) {
+      super(option, config);
+
+      this.setState({
+        ctr: 0
+      });
+    }
+
+    render () {
+      return `
+        <fieldset class="my-sub-comp" ui-click="handlerUpdateLabel">
+          <legend>SubComp:</legend>
+          My Sub Comp - A - Timestamp changing at ReRendering: ${Date.now()} <br>
+          Click Me: ${this.getState().ctr}
+        </fieldset>
+      `;
+    }
+
+    // Ref in the DOM: <div ui-click="handlerUpdateLabel">
+    handlerUpdateLabel() {
+      this.setState({
+        ctr: this.getState().ctr + 1
+      })
+    }
+  }
+
+  class MyComp extends GameGUI.Component {
+    render () {
+      return `
+        <div class="my-comp">
+          <h1>My Comp Including:</h1>
+          ${this.include(MySubComp, {}, {id: 'my-sub-comp-a'})}
+        </div>
+      `;
+    }
+  }
+
+  const gui = new GameGUI.default(MyComp, '#ui-root', {
+    foo: 'bar'
+  });
+
+  gui.getCompByType('MySubComp')[0].setState({
+    ctr: 1
+  });
+
+  gui.getCompById('my-sub-comp-a').setState({
+    ctr: 2
+  });
+</script>
+</body>
+</html>

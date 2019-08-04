@@ -30,13 +30,23 @@
           </div>
           ${this.include(SubComp)}
           ${this.include(DumbComp)}
+          <div>
+            Read only external data: ${this.option.someOtherNonGameUIEntity.data.iWantToRenderThis}
+          </div>
         </div>
       `;
     }
   }
 
+  const someOtherNonGameUIEntity = {
+    data: {
+      iWantToRenderThis: 'This text is coming from a Non-Game UI Entity within the App',
+    }
+  };
+
   const gui = new GameGUI.default(MyComp, '#ui-root', {
-    foo: 'bar'
+    foo: 'bar',
+    someOtherNonGameUIEntity
   });
 </script>
 </body>
