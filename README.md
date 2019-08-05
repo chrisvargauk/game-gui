@@ -16,9 +16,7 @@ import GameGUI, {Component} from 'game-gui';
 class MyComp extends Component {
   render () {
     return `
-      <div class="my-comp">
-        Hello World!
-      </div>
+      <span>Hello World!</span>
     `;
   }
 }
@@ -33,12 +31,12 @@ class MyComp extends Component {
     const list = ['foo', 'bar'];
 
     return `
-      <div class="my-comp">
-        Rendering List:<br>
-        ${ list.map(item => (`<div>${item}</div>`))
+      Rendering List:<br>
+      <ul>
+        ${ list.map(item => (`<li>${item}</li>`))
                .join('')
         }
-      </div>
+      </ul>
     `;
   }
 }
@@ -54,10 +52,8 @@ Note: See Life-cycle section for manual binding.
 class MyComp extends Component {
   render () {
     return `
-      <div class="my-comp">
-        <button ui-click="myClickHandler">Click Me!</button>
-        <div ui-click="myClickHandler">Click Me!</div>
-      </div>
+      <button ui-click="myClickHandler">Click Me!</button>
+      <div ui-click="myClickHandler">Click Me!</div>
     `;
   }
 
@@ -72,22 +68,22 @@ Use Dumb Components for modularizing simple UI elements that doesn't require the
 Include Smart or Dumb Components inside each-other or use them inside iterators.
 ```javascript
 const MyDumbComp = ( item ) =>
-  (`<div class="dumb-comp">${item}</div>`);
+  (`<li class="dumb-comp">${item}</div>`);
 
 class MyComp extends Component {
   render () {
     const list = ['foo', 'bar'];
 
     return `
-      <div class="my-comp">
-        ${this.include(MyDumbComp, 'Included Dumb Comp in HTML')}
-
-        Rendering List:<br>
+      Rendering List:<br>
+      <ul>
         ${ list.map(item => this.include(MyDumbComp, item))
                .join('')
         }
-        </div>
-      `;
+
+        ${this.include(MyDumbComp, 'Included Dumb Comp in HTML')}
+      </ul>
+    `;
   }
 }
 ```
@@ -106,10 +102,8 @@ class MySmartComp extends Component {
 
   render () {
     return `
-      <div class="my-smart-comp">
-        <div ui-click="handlerUpdateLabel">
-          Click Me: ${this.getState().ctr}
-        </div>
+      <div ui-click="handlerUpdateLabel">
+        Click Me: ${this.getState().ctr}
       </div>
     `;
   }
@@ -131,9 +125,7 @@ Also note, running the query on the Components DOM Section only by using ```this
 class MySmartComp extends Component {
   render () {
     return `
-      <div class="my-smart-comp">
-        <button class="rendered-button">Hover Over Me!</button>
-      </div>
+      <button class="rendered-button">Hover Over Me!</button>
     `;
   }
 

@@ -9,22 +9,22 @@
 <script src="../dist/GameGUI.js"></script>
 <script>
  const MyDumbComp = ( item ) =>
-    (`<div class="dumb-comp">${item}</div>`);
+    (`<li class="dumb-comp">${item}</li>`);
 
   class MyComp extends GameGUI.Component {
     render () {
       const list = ['foo', 'bar'];
 
       return `
-        <div class="my-comp">
-          ${this.include(MyDumbComp, 'Included Dumb Comp in HTML')}
-
-          Rendering List:<br>
+        Rendering List:<br>
+        <ul>
           ${ list.map(item => this.include(MyDumbComp, item))
                  .join('')
           }
-          </div>
-        `;
+
+          ${this.include(MyDumbComp, 'Included Dumb Comp in HTML')}
+        </ul>
+      `;
     }
   }
 

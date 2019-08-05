@@ -10,9 +10,7 @@
 <script>
   class MySmartComp extends GameGUI.Component {
     render ( item ) {
-      return `
-        <div class="my-smart-comp">${item}</div>
-      `;
+      return `<li>${item}</li>`;
     }
   }
 
@@ -21,14 +19,14 @@
       const list = ['foo', 'bar'];
 
       return `
-        <div class="root-comp">
-          ${this.include(MySmartComp, 'Included Smart Comp in HTML')}
-
-          Rendering List:<br>
+        Rendering List:<br>
+        <ul>
           ${ list.map(item => this.include(MySmartComp, item))
-          .join('')
+                 .join('')
           }
-        </div>
+
+          ${this.include(MySmartComp, 'Included Smart Comp in HTML')}
+        </ul>
       `;
     }
   }

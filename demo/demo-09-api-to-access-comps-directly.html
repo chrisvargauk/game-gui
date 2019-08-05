@@ -38,10 +38,8 @@
   class MyComp extends GameGUI.Component {
     render () {
       return `
-        <div class="my-comp">
-          <h1>My Comp Including:</h1>
-          ${this.include(MySubComp, {}, {id: 'my-sub-comp-a'})}
-        </div>
+        <h1>My Comp Including:</h1>
+        ${this.include(MySubComp, {}, {id: 'my-sub-comp-a'})}
       `;
     }
   }

@@ -14,9 +14,7 @@
   class SubComp extends GameGUI.Component {
     render () {
       return `
-        <div class="sub-comp">
-          Options available in Sub Comp | ${this.option.foo}
-        </div>
+        Options available in Sub Comp | ${this.option.foo}
       `;
     }
   }
@@ -24,15 +22,13 @@
   class MyComp extends GameGUI.Component {
     render () {
       return `
-        <div class="my-comp">
-          <div>
-            Options available in Root Comp | ${this.option.foo}
-          </div>
-          ${this.include(SubComp)}
-          ${this.include(DumbComp)}
-          <div>
-            Read only external data: ${this.option.someOtherNonGameUIEntity.data.iWantToRenderThis}
-          </div>
+        <div>
+          Options available in Root Comp | ${this.option.foo}
+        </div>
+        ${this.include(SubComp)}
+        ${this.include(DumbComp)}
+        <div>
+          Read only external data: ${this.option.someOtherNonGameUIEntity.data.iWantToRenderThis}
         </div>
       `;
     }

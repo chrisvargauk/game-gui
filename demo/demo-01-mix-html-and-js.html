@@ -13,12 +13,12 @@
       const list = ['foo', 'bar'];
 
       return `
-        <div class="my-comp">
-          Rendering List:<br>
-          ${ list.map(item => (`<div>${item}</div>`))
+        Rendering List:<br>
+        <ul>
+          ${ list.map(item => (`<li>${item}</li>`))
                  .join('')
           }
-        </div>
+        </ul>
       `;
     }
   }

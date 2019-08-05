@@ -2,15 +2,23 @@ export class Component {
   constructor ( option, config = {}) {
     this.option                     = option;
     this.config                     = config;
-    this.id                         = typeof config.id !== 'undefined' ? config.id : Date.now() + '-' + Math.random();
+    this.id                         = typeof config.id !== 'undefined' ? config.id : this.uid();
     this.type                       = Object.getPrototypeOf(this).constructor.name;
+    this.dom                        = this.createDomElement ( this.type, this.id );
     this.listObjCompChild           = {};
     this.html                       = '';
-    this.dom                        = document.createElement('div');
     this.ctrChild                   = -1;
     this.state                      = {};
     this.isStateUpdated             = false;
     this.dataFromParentAsStringPrev = undefined;
+  }
+
+  createDomElement ( type, id ) {
+    const domElement = document.createElement('div');
+    domElement.classList.add( this.camelCaseToNakeCase( type ) );
+    domElement.setAttribute('id', id);
+
+    return domElement;
   }
 
   renderToHtmlAndDomify ( dataFromParent ) {
@@ -185,6 +193,18 @@ export class Component {
       this.scheduleRendering( this );
     }
   };
+
+
+  // # Utility
+  // # #######
+
+  camelCaseToNakeCase (str) {
+    return str.replace(/([a-zA-Z])(?=[A-Z])/g, '$1-').toLowerCase()
+  }
+
+  uid () {
+    return Date.now()+''+Math.round(Math.random() * 100000);
+  }
 }
 
 export default Component;

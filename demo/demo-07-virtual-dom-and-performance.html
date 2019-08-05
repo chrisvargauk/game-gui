@@ -19,7 +19,7 @@
 
     render ( dataFromParent ) {
       return `
-        <fieldset class="sub-comp" ui-click="handlerUpdateLabel">
+        <fieldset ui-click="handlerUpdateLabel">
           <legend>SubComp:</legend>
           Timestamp changing at ReRendering: ${Date.now()} <br>
           Click Me: ${this.getState().ctr} - dataFromParent(if any): ${dataFromParent}
@@ -46,23 +46,20 @@
 
     render () {
       return `
-        <div class="parent-comp">
-          <div ui-click="handlerUpdateLabel">
-            Timestamp changing at ReRendering: ${Date.now()} <br>
-            Click Me: ${this.getState().ctr}
-          </div>
-
-          <br>
-          <b>SubComp receiving NO data from parent</b> - Doesn't ReRender when Parent Comp chaned
-          ${this.include(MySubComp)}
-
-          <b>SubComp receiving changing data from parent</b> - Rerenders when Parent Comp changed
-          ${this.include(MySubComp, this.getState().ctr)}
-
-          <b>SubComp receiving static data from parent</b> - Doesn't ReRender when Parent Comp chaned - Deep Diff
-          ${this.include(MySubComp, 'ImStaticTextPassedIn')}
-
+        <div ui-click="handlerUpdateLabel">
+          Timestamp changing at ReRendering: ${Date.now()} <br>
+          Click Me: ${this.getState().ctr}
         </div>
+
+        <br>
+        <b>SubComp receiving NO data from parent</b> - Doesn't ReRender when Parent Comp chaned
+        ${this.include(MySubComp)}
+
+        <b>SubComp receiving changing data from parent</b> - Rerenders when Parent Comp changed
+        ${this.include(MySubComp, this.getState().ctr)}
+
+        <b>SubComp receiving static data from parent</b> - Doesn't ReRender when Parent Comp chaned - Deep Diff
+        ${this.include(MySubComp, 'ImStaticTextPassedIn')}
       `;
     }
 
