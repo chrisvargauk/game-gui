@@ -111,7 +111,7 @@ class Component {
     this.option                     = option;
     this.config                     = config;
     this.id                         = typeof config.id !== 'undefined' ? config.id : this.uid();
-    this.type                       = Object.getPrototypeOf(this).constructor.name;
+    this.type                       = this.getTypeOfComp(this);
     this.dom                        = this.createDomElement ( this.type, this.id );
     this.listObjCompChild           = {};
     this.html                       = '';
@@ -240,7 +240,7 @@ class Component {
 
   include ( ClassComp, dataFromParent, config ) {
     // If Smart Comp (Class)
-    if ( Function.prototype.toString.call(ClassComp).indexOf('class') === 0 ) {
+    if ( ClassComp.prototype instanceof Component ) {
       this.ctrChild++;
       var nameComp  = ClassComp.name;
       var compChild = this.listObjCompChild[ this.ctrChild ];
@@ -312,6 +312,14 @@ class Component {
 
   uid () {
     return Date.now()+''+Math.round(Math.random() * 100000);
+  }
+
+  getTypeOfComp ( comp ) {
+    // Issue: Babel transpiles MyCompName to MyCompName_ImportedCompName. We are filtering this off here.
+    //        If we ignored this, the code wouldn't be compilable.
+    const type = Object.getPrototypeOf(comp).constructor.name;
+    const listTypePart = type.split('_');
+    return listTypePart[ listTypePart.length -1 ];
   }
 }
 
