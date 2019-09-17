@@ -98,7 +98,7 @@ export class Component {
 
     // Scenario 4)  prev !== undefined && passed !== undefined --> COMPARE
     if ( typeof this.dataFromParentAsStringPrev !== 'undefined' &&
-      typeof dataFromParent                  !== 'undefined'
+         typeof dataFromParent                  !== 'undefined'
     ) {
       const dataFromParentAsString = JSON.stringify( dataFromParent );
 

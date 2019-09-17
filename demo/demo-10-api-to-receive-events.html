@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+</head>
+<body>
+<div id="ui-root"></div>
+<script src="../dist/GameGUI.js"></script>
+<script>
+  class MySubComp extends GameGUI.Component {
+    constructor (option, config) {
+      super(option, config);
+
+      this.setState({
+        ctr: 0
+      });
+    }
+
+    render () {
+      return `
+        <fieldset class="my-sub-comp" ui-click="handlerUpdateLabel">
+          <legend>SubComp:</legend>
+          Click me to rerender!<br>
+          Clicked Me: ${this.getState().ctr} times
+        </fieldset>
+      `;
+    }
+
+    // Ref in the DOM: <div ui-click="handlerUpdateLabel">
+    handlerUpdateLabel() {
+      this.setState({
+        ctr: this.getState().ctr + 1
+      })
+    }
+  }
+
+  class MyComp extends GameGUI.Component {
+    render () {
+      return `
+        <h1>OnRender Event Handler</h1>
+        <p>
+          Keep clicking on the Sub Comp. below to force it to rerender itself.
+          <b>Notice your Render Event Handlers passed in firing every single time you click.</b>
+          - check the console!
+        </p>
+        ${this.include( MySubComp )}
+      `;
+    }
+  }
+
+  const gui = new GameGUI.default(MyComp, '#ui-root');
+  gui.onRender(() => {
+    console.log('1st OnRender event handler called!');
+  });
+  gui.onRender(() => {
+    console.log('2nd OnRender event handler called!');
+  });
+</script>
+</body>
+</html>

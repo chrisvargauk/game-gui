@@ -1,6 +1,6 @@
 {
   "name": "game-gui",
-  "version": "1.3.20",
+  "version": "1.4.20",
   "description": "Yet another UI framework: fine-tuned for Game Development in the Browser. The 20% of modern UI frameworks that makes them great and NOT the 80% that makes them slow.",
   "main": "dist/GameGUI.js",
   "scripts": {

@@ -36,6 +36,10 @@ export class GameGUI {
     this.listObjTypeComp = {};
     this.listObjIdComp = {};
 
+    this.listObjCallback = {
+      listOnRender: [],
+    };
+
     // Note: Don't worry about calling render 60 times a sec,
     // render method start with "if(!this.isRenderingDue ) return;"
     this.tokenUiRender;
@@ -86,8 +90,7 @@ export class GameGUI {
       return;
     }
 
-    // this.rootComp.renderToHtmlAndDomify();
-
+    // Render any Comp. that is scheduled
     for (let idComp in this.listObjIdRenderingScheduled) {
       let comp = this.listObjIdRenderingScheduled[ idComp ];
 
@@ -100,7 +103,18 @@ export class GameGUI {
     }
 
     this.isRenderingDue = false;
+
+    // Call all the render event handlers passed in externally
+    if( 0 < this.listObjCallback.listOnRender.length ) {
+      for(let indexListOnRender=0; indexListOnRender<this.listObjCallback.listOnRender.length; indexListOnRender++) {
+        this.listObjCallback.listOnRender[ indexListOnRender ]();
+      }
+    }
   };
+
+  onRender ( callback ) {
+    this.listObjCallback.listOnRender.push( callback );
+  }
 
   indexComp( comp ) {
     // Index Comps by Type

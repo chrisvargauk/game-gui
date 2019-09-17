@@ -137,8 +137,24 @@ class MySmartComp extends Component {
 }
 ```
 
+### Hook Up External Event Handlers
+Use `gui.onRender(yourEvtHandler);` to pass in as many OnRender Event Handlers as you like.
+These event handlers will be call every time when any part of the UI gets rerendered. 
+If multiple Comps. get rerendered, your event handlers will be called only once, 
+when all the rendering activity is complete and the UI is in its final state.  
+Note: In the future more event handlers will be supported, thats why the generic format. 
+```javascript
+gui.onRender(() => {
+console.log('1st OnRender event handler called!');
+});
+
+gui.onRender(() => {
+console.log('2nd OnRender event handler called!');
+});
+```
+
 ### ES6, CJS, AMD, UMD
-dist/GameGUI is built with UMD, therefore you are free to chose what module definition you prefer to use in 
+dist/GameGUI.js is built with UMD, therefore you are free to chose what module definition you prefer to use in 
 your own project.
 
 # Contribute
