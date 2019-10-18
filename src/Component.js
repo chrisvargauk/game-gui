@@ -31,6 +31,8 @@ export class Component {
       ) {
         return false;
       }
+    } else if (typeof dataFromParent !== 'undefined') {
+      this.dataFromParentAsStringPrev = JSON.stringify( dataFromParent );
     }
 
     // Render to HTML String
@@ -140,6 +142,7 @@ export class Component {
       // Create new instance of Comp only if it hasn't been created yet
       if ( typeof compChild === 'undefined' ) {
         compChild = this.listObjCompChild[ this.ctrChild ] = new ClassComp( this.option, config );
+        compChild.dataFromParent = dataFromParent;
 
         // Hook up Game GUI Methods: scheduler, indexComp
         // Note: make sure you dont bind this, you need scheduler to resolve to ui framework,
@@ -154,7 +157,7 @@ export class Component {
         this.indexComp( compChild );
       }
 
-      compChild.renderToHtmlAndDomify( dataFromParent );
+      compChild.renderToHtmlAndDomify( compChild.dataFromParent );
 
       return `<div class="comp-placeholder" type="${nameComp}" ctr-child="${this.ctrChild}"></div>`;
 

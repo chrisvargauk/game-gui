@@ -140,4 +140,5 @@ export class GameGUI {
 }
 
 export * from './Component';
+export * from './GameGUIRouter';
 export default GameGUI;

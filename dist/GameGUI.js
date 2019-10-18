@@ -139,6 +139,8 @@ class Component {
       ) {
         return false;
       }
+    } else if (typeof dataFromParent !== 'undefined') {
+      this.dataFromParentAsStringPrev = JSON.stringify( dataFromParent );
     }
 
     // Render to HTML String
@@ -248,6 +250,7 @@ class Component {
       // Create new instance of Comp only if it hasn't been created yet
       if ( typeof compChild === 'undefined' ) {
         compChild = this.listObjCompChild[ this.ctrChild ] = new ClassComp( this.option, config );
+        compChild.dataFromParent = dataFromParent;
 
         // Hook up Game GUI Methods: scheduler, indexComp
         // Note: make sure you dont bind this, you need scheduler to resolve to ui framework,
@@ -262,7 +265,7 @@ class Component {
         this.indexComp( compChild );
       }
 
-      compChild.renderToHtmlAndDomify( dataFromParent );
+      compChild.renderToHtmlAndDomify( compChild.dataFromParent );
 
       return `<div class="comp-placeholder" type="${nameComp}" ctr-child="${this.ctrChild}"></div>`;
 
@@ -331,7 +334,7 @@ class Component {
 /*!************************!*\
   !*** ./src/GameGUI.js ***!
   \************************/
-/*! exports provided: GameGUI, default, Component */
+/*! exports provided: GameGUI, default, Component, Router */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -339,6 +342,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "GameGUI", function() { return GameGUI; });
 /* harmony import */ var _Component__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./Component */ "./src/Component.js");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Component", function() { return _Component__WEBPACK_IMPORTED_MODULE_0__["Component"]; });
+
+/* harmony import */ var _GameGUIRouter__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./GameGUIRouter */ "./src/GameGUIRouter.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Router", function() { return _GameGUIRouter__WEBPACK_IMPORTED_MODULE_1__["Router"]; });
 
 class GameGUI {
   constructor(RootComp, selectorGuiRoot, option) {
@@ -482,7 +488,131 @@ class GameGUI {
 }
 
 
+
 /* harmony default export */ __webpack_exports__["default"] = (GameGUI);
+
+/***/ }),
+
+/***/ "./src/GameGUIRouter.js":
+/*!******************************!*\
+  !*** ./src/GameGUIRouter.js ***!
+  \******************************/
+/*! exports provided: Router, default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Router", function() { return Router; });
+// http://localhost:8000/demo/demo-11-router.html#@menu:main/setting@game:running?user=Jane&age=20&foo
+// http://localhost:8000/demo/demo-11-router.html#running?user=Jane&age=20&foo
+
+// todo: rerender Comps at hash change
+
+class Router {
+  constructor() {
+    this.listRout = [];
+    this.listObjPathToMatch = {};
+    window.addEventListener("hashchange", this.handlerHashChange.bind( this ), false);
+    this.handlerHashChange();
+  }
+
+  getHash() {
+    // Filter off "#"
+    // Note: no str.replace(..) cos its slow
+    const hashRawParts = location.hash.split('#');
+
+    if ( 2 < hashRawParts.length ) {
+      throw 'Only one "#" is allowed in the URL.';
+    }
+
+    return hashRawParts.join('');
+  }
+
+  getListRout() {
+    const hash = this.getHash();
+
+    // Skip if non-standard Rout is presented
+    if (hash.indexOf('@') === -1 ) {
+      return [hash];
+    }
+
+    const listRout = hash.split('@').filter( rout => rout !== '');
+
+    return listRout;
+  }
+
+  processRout( rout ) {
+    let id,
+        routRemaining;
+    if ( rout.indexOf(':') !== -1 ) {
+      const routListPartById = rout.split(':');
+      id = routListPartById[ 0 ];
+      routRemaining = routListPartById[ 1 ];
+    } else {
+      routRemaining = rout;
+    }
+
+    let listObjAttribute,
+        path;
+    if ( routRemaining.indexOf('?') !== -1 ) {
+      const listPartByQuestionmark = routRemaining.split('?');
+      const strListAttribute  = listPartByQuestionmark[1];
+      const listAttributeStr  = strListAttribute.split('&');
+      path                    = listPartByQuestionmark[0];
+
+      listObjAttribute = {};
+      listAttributeStr.forEach(attributeStr => {
+        if ( attributeStr.indexOf('=') !== -1 ) {
+          const listPartByEqualSign = attributeStr.split('=');
+          listObjAttribute[ listPartByEqualSign[0] ] = listPartByEqualSign[1];
+        } else {
+          listObjAttribute[attributeStr] = true;
+        }
+      });
+
+    } else {
+      path = routRemaining;
+    }
+
+    return {
+      id,
+      listObjAttribute,
+      path: (id ? id+':' : '')+path,
+    }
+  }
+
+  handlerHashChange () {
+    const listRoutRaw = this.getListRout();
+    this.listRout = listRoutRaw.map(rout => this.processRout(rout));
+    this.fireMatchAll();
+    console.log('this.listRout:', this.listRout);
+  }
+
+  match( pathToMatch, fn ) {
+    for ( let indexListRout=0; indexListRout<this.listRout.length; indexListRout++ ) {
+      const rout = this.listRout[ indexListRout ];
+
+      if ( rout.path === pathToMatch ) {
+        return fn( rout.listObjAttribute );
+      }
+    }
+
+    return '';
+  }
+
+  matchPath( pathToMatch, fn ) {
+    this.listObjPathToMatch[ pathToMatch ] = fn;
+  }
+
+  fireMatchAll() {
+    for (let pathToMatch in this.listObjPathToMatch) {
+      const fn = this.listObjPathToMatch[ pathToMatch ];
+      fn();
+    }
+  }
+}
+
+/* harmony default export */ __webpack_exports__["default"] = (Router);
 
 /***/ })
 

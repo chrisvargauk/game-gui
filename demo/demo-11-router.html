@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+</head>
+<body>
+<div id="ui-root"></div>
+<script src="../dist/GameGUI.js"></script>
+<!--<script src="../src/GameGUIRouter.js"></script>-->
+<script>
+  // http://localhost:8000/demo/demo-11-router.html#notRunning?user=Jane&age=37&foo&bar
+
+  const gameGUIRouter = new GameGUI.Router();
+
+  class CompExampleA extends GameGUI.Component {
+    render (attrib) {
+      return `
+        This is rout A </br>
+        Running is matched :) ${attrib.user} age: ${attrib.age}\`
+      `;
+    }
+  }
+
+  class CompExampleC extends GameGUI.Component {
+    render (attrib) {
+      return `
+        This is rout C </br>
+        Running is matched :) ${attrib.user} age: ${attrib.age}\`
+      `;
+    }
+  }
+
+  const CompExampleB = function (attrib) {
+    return `
+      This is rout B</br>
+        Running is matched :) ${attrib.user} age: ${attrib.age}
+    `;
+  };
+
+  class Rout extends GameGUI.Component {
+    constructor (option, config) {
+      super(option, config);
+
+      gameGUIRouter.matchPath(this.config.path, () => {
+        this.setState({
+          timestampChange: Date.now(),
+        });
+      });
+    }
+
+    render() {
+      return `
+        ${gameGUIRouter.match(this.config.path, (attrib) => {
+        return `
+          ${this.include(this.config.comp, attrib)}
+        `;
+      })}
+      `;
+    }
+  }
+
+  class MyComp extends GameGUI.Component {
+    render () {
+      return `
+        <span>Hello World!</span><br>
+        ${this.include(Rout, {}, {path: 'running', comp: CompExampleA})}
+      `;
+    }
+  }
+
+  const gui = new GameGUI.default(MyComp, '#ui-root');
+</script>
+</body>
+</html>
