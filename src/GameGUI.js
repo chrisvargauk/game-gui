@@ -24,6 +24,7 @@ export class GameGUI {
       fps: 60,
     };
 
+    // Should compose option from default options, and options passed in at construction
     this.option = {
       ...this.optionDefault,
       ...option,

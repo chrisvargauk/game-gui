@@ -4,7 +4,8 @@
   "description": "Yet another UI framework: fine-tuned for Game Development in the Browser. The 20% of modern UI frameworks that makes them great and NOT the 80% that makes them slow.",
   "main": "dist/GameGUI.js",
   "scripts": {
-    "build": "webpack --config webpack.config.js"
+    "build": "webpack --config webpack.config.js",
+    "test": "jest --no-cache --verbose"
   },
   "repository": {
     "type": "git",
@@ -18,7 +19,18 @@
   },
   "homepage": "https://github.com/chrisvargauk/game-gui#readme",
   "devDependencies": {
+    "jest": "^24.9.0",
     "webpack": "^4.37.0",
-    "webpack-cli": "^3.3.6"
+    "webpack-cli": "^3.3.6",
+    "@babel/core": "^7.2.2",
+    "@babel/node": "^7.2.2",
+    "@babel/plugin-syntax-dynamic-import": "^7.2.0",
+    "@babel/plugin-transform-runtime": "^7.2.0",
+    "@babel/preset-env": "^7.3.1",
+    "@babel/runtime": "^7.4.5",
+    "babel-core": "^7.0.0-bridge.0",
+    "babel-jest": "^22.1.4",
+    "babel-loader": "^8.0.5",
+    "babel-plugin-dynamic-import-node": "^2.2.0"
   }
 }
