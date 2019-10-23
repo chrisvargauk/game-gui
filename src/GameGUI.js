@@ -81,14 +81,18 @@ export class GameGUI {
   };
 
   scheduleRendering (comp) {
+    if ( !comp || !comp.id ) {
+      throw('Non-standard Comp passed in to be scheduled. Comp is either undefined or Comp ID is undefined or null or Empty string etc..');
+    }
+
     this.isRenderingDue = true;
-    this.listObjIdRenderingScheduled[comp.id] = comp;
+    this.listObjIdRenderingScheduled[ comp.id ] = comp;
   };
 
   render () {
     // Skipp rendering if there was no change
     if (!this.isRenderingDue) {
-      return;
+      return false;
     }
 
     // Render any Comp. that is scheduled
@@ -106,15 +110,17 @@ export class GameGUI {
     this.isRenderingDue = false;
 
     // Call all the render event handlers passed in externally
-    if( 0 < this.listObjCallback.listOnRender.length ) {
-      for(let indexListOnRender=0; indexListOnRender<this.listObjCallback.listOnRender.length; indexListOnRender++) {
-        this.listObjCallback.listOnRender[ indexListOnRender ]();
+    if( 0 < this.listOnRender.length ) {
+      for(let indexListOnRender=0; indexListOnRender<this.listOnRender.length; indexListOnRender++) {
+        this.listOnRender[ indexListOnRender ]();
       }
     }
+
+    return true;
   };
 
   onRender ( callback ) {
-    this.listObjCallback.listOnRender.push( callback );
+    this.listOnRender.push( callback );
   }
 
   indexComp( comp ) {

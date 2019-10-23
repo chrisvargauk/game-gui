@@ -145,11 +145,11 @@ when all the rendering activity is complete and the UI is in its final state.
 Note: In the future more event handlers will be supported, thats why the generic format. 
 ```javascript
 gui.onRender(() => {
-console.log('1st OnRender event handler called!');
+  console.log('1st OnRender event handler called!');
 });
 
 gui.onRender(() => {
-console.log('2nd OnRender event handler called!');
+  console.log('2nd OnRender event handler called!');
 });
 ```
 

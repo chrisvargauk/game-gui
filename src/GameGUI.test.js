@@ -172,4 +172,129 @@ describe('Game GUI', () => {
       expect( gameGUIMock.listObjTypeComp.typeFake[0] instanceof RootCompMock ).toBe( true );
     });
   });
+
+  describe('render', () => {
+    it('Should only render if there is something to be rendered.', () => {
+      const gameGUIMock = {
+        isRenderingDue: false,
+      };
+
+      expect( GameGUI.prototype.render.call(gameGUIMock) ).toBe( false );
+    });
+
+    describe('Should', () => {
+      const renderToHtmlAndDomifyA = jest.fn(),
+            renderToHtmlAndDomifyB = jest.fn(),
+            renderEvtHandlerExtA   = jest.fn(),
+            renderEvtHandlerExtB   = jest.fn(),
+            dataFromParentPrev     = {foo: 'bar'};
+      const compA                  = {
+              id:                    'compA',
+              renderToHtmlAndDomify: renderToHtmlAndDomifyA,
+            },
+            compB                  = {
+              id:                    'compB',
+              renderToHtmlAndDomify: renderToHtmlAndDomifyB,
+              dataFromParentAsStringPrev: JSON.stringify( dataFromParentPrev),
+            };
+
+      const gameGUIMock = {
+        isRenderingDue: true,
+        listOnRender: [],
+        listObjIdRenderingScheduled: {}
+      };
+
+      GameGUI.prototype.scheduleRendering.call( gameGUIMock, compA );
+      GameGUI.prototype.scheduleRendering.call( gameGUIMock, compB );
+
+      GameGUI.prototype.onRender.call( gameGUIMock, renderEvtHandlerExtA );
+      GameGUI.prototype.onRender.call( gameGUIMock, renderEvtHandlerExtB );
+
+      GameGUI.prototype.render.call( gameGUIMock );
+
+      it('render Comps scheduled in the queue,', () => {
+        expect( renderToHtmlAndDomifyA ).toHaveBeenCalled();
+        expect( renderToHtmlAndDomifyB ).toHaveBeenCalled();
+      });
+
+      it('then remove those Comps from that queue.', () => {
+        expect( Object.keys(gameGUIMock.listObjIdRenderingScheduled).length ).toBe( 0 );
+      });
+
+      it('update sate to avoid rendering till another Comp is scheduled for rendering', () => {
+        expect( gameGUIMock.isRenderingDue ).toBe( false );
+      });
+
+      it('recover stored data passed in from Parent Comp previously, and pass it along to Comp Rendering.', () => {
+        expect( renderToHtmlAndDomifyA ).toHaveBeenCalledWith( undefined );
+        expect( renderToHtmlAndDomifyB ).toHaveBeenCalledWith( dataFromParentPrev );
+      });
+
+      it('call all the Render Event Handlers passed in externally, right after all Comps in the queue is rendered.', () => {
+        expect( renderEvtHandlerExtA ).toHaveBeenCalled();
+        expect( renderEvtHandlerExtB ).toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('scheduleRendering', () => {
+    it('Should throw if no Comp is passed in.', () => {
+      let errorMsg;
+      try {
+        GameGUI.prototype.scheduleRendering.call( undefined );
+      } catch ( err ) {
+        errorMsg = err;
+      }
+
+      expect( typeof errorMsg !== 'undefined' ).toBe( true );
+    });
+
+    it('Should throw if non-standard Comp is passed in.', () => {
+      const comp = {};
+
+      let errorMsg;
+      try {
+        GameGUI.prototype.scheduleRendering.call( null, comp );
+      } catch ( err ) {
+        errorMsg = err;
+      }
+
+      expect( typeof errorMsg !== 'undefined' ).toBe( true );
+    });
+
+    it('Should add Comp passed in to Render Queue by id', () => {
+      // const renderToHtmlAndDomifyA = jest.fn();
+      // const compA                  = {
+      //   id:                    'compA',
+      //   renderToHtmlAndDomify: renderToHtmlAndDomifyA,
+      // };
+      //
+      // const gameGUIMock = {
+      //   isRenderingDue: false,
+      //   listOnRender: [],
+      //   listObjIdRenderingScheduled: {}
+      // };
+      //
+      // GameGUI.prototype.scheduleRendering.call( gameGUIMock, compA );
+    });
+
+    it('Should add Comp passed in to Render Queue and should be rendered at next available render time', () => {
+      const renderToHtmlAndDomifyA = jest.fn();
+      const compA                  = {
+              id:                    'compA',
+              renderToHtmlAndDomify: renderToHtmlAndDomifyA,
+            };
+
+      const gameGUIMock = {
+        isRenderingDue: false,
+        listOnRender: [],
+        listObjIdRenderingScheduled: {}
+      };
+
+      GameGUI.prototype.scheduleRendering.call( gameGUIMock, compA );
+      GameGUI.prototype.render.call( gameGUIMock );
+
+      expect( renderToHtmlAndDomifyA ).toHaveBeenCalled();
+    });
+  });
 });
