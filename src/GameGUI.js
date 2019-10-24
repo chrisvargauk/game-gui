@@ -37,9 +37,8 @@ export class GameGUI {
     this.listObjTypeComp = {};
     this.listObjIdComp = {};
 
-    this.listObjCallback = {
-      listOnRender: [],
-    };
+    // Store and call from the list of callbacks passed in to be run right after rendering(s) is complete.
+    this.listOnRender = [];
 
     // Note: Don't worry about calling render 60 times a sec,
     // render method start with "if(!this.isRenderingDue ) return;"
@@ -55,7 +54,7 @@ export class GameGUI {
     // Get UI Root
     this.domRoot = document.querySelector(selectorGuiRoot);
 
-    // Skip if root DOM Element doesn't exist
+    // Throws if Root DOM Element doesn't exist
     if (this.domRoot === null) {
       throw('ERROR: DOM Root can\'t be found by using the provided selector: ' + selectorGuiRoot);
     }
@@ -99,6 +98,7 @@ export class GameGUI {
     for (let idComp in this.listObjIdRenderingScheduled) {
       let comp = this.listObjIdRenderingScheduled[ idComp ];
 
+      // Recover stored data passed in from Parent Comp previously, and pass it along to Comp Rendering.
       let dataFromParentPrev = typeof comp.dataFromParentAsStringPrev !== 'undefined' ?
         JSON.parse( comp.dataFromParentAsStringPrev ) :
         undefined;
@@ -138,11 +138,21 @@ export class GameGUI {
   };
 
   getCompByType ( type ) {
+    // todo: feel free to remove remove after 20200101
+    console.warn('Deprecated: "getCompByType( type )". Use "getListCompByType( type )" instead. "getCompByType( type )" will not be supported after end of 2019.');
     return this.listObjTypeComp[ type ];
+  }
+
+  getListCompByType ( type ) {
+      return this.listObjTypeComp[ type ];
   }
 
   getCompById ( id ) {
     return this.listObjIdComp[ id ];
+  }
+
+  getDomRoot() {
+    this.domRoot;
   }
 }
 

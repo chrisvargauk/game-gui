@@ -1,6 +1,14 @@
 import GameGUI from './GameGUI';
 
 describe('Game GUI', () => {
+  const createMockGameGuiInstance = function () {
+    const gameGUIMock = new GameGUI();
+    global.setInterval = jest.fn();
+    gameGUIMock.init();
+
+    return gameGUIMock;
+  };
+
   describe('Constructor', () => {
     // Make a copy to overwrite methods that we are not interested testing for now
     class GameGUICopy extends GameGUI {
@@ -107,6 +115,26 @@ describe('Game GUI', () => {
   });
 
   describe('regRootComp', () => {
+    it('Should throw if Root DOM Element doesn\'t exist', () => {
+      global.document.querySelector = () => null;
+      const RootCompMock = {};
+
+      let errorMsg = false;
+      try {
+        GameGUI.prototype.regRootComp.call(null, RootCompMock, '#ui-rout-fake');
+      } catch( err ) {
+        errorMsg = err.message;
+      }
+
+      expect(typeof errorMsg).toBe('string');
+
+      jest.restoreAllMocks();
+    });
+
+    // it('Should register DOM Root', () => {
+    //
+    // });
+
     it('Throws if provided GUI Root Selector points to non-existent DOM Element.', () => {
       let errorMsg = false;
       try {
@@ -198,11 +226,7 @@ describe('Game GUI', () => {
               dataFromParentAsStringPrev: JSON.stringify( dataFromParentPrev),
             };
 
-      const gameGUIMock = {
-        isRenderingDue: true,
-        listOnRender: [],
-        listObjIdRenderingScheduled: {}
-      };
+      const gameGUIMock = createMockGameGuiInstance();
 
       GameGUI.prototype.scheduleRendering.call( gameGUIMock, compA );
       GameGUI.prototype.scheduleRendering.call( gameGUIMock, compB );
@@ -211,6 +235,11 @@ describe('Game GUI', () => {
       GameGUI.prototype.onRender.call( gameGUIMock, renderEvtHandlerExtB );
 
       GameGUI.prototype.render.call( gameGUIMock );
+
+      it('recover stored data passed in from Parent Comp previously, and pass it along to Comp Rendering.', () => {
+        expect( renderToHtmlAndDomifyA ).toHaveBeenCalledWith( undefined );
+        expect( renderToHtmlAndDomifyB ).toHaveBeenCalledWith( dataFromParentPrev );
+      });
 
       it('render Comps scheduled in the queue,', () => {
         expect( renderToHtmlAndDomifyA ).toHaveBeenCalled();
@@ -221,13 +250,8 @@ describe('Game GUI', () => {
         expect( Object.keys(gameGUIMock.listObjIdRenderingScheduled).length ).toBe( 0 );
       });
 
-      it('update sate to avoid rendering till another Comp is scheduled for rendering', () => {
-        expect( gameGUIMock.isRenderingDue ).toBe( false );
-      });
-
-      it('recover stored data passed in from Parent Comp previously, and pass it along to Comp Rendering.', () => {
-        expect( renderToHtmlAndDomifyA ).toHaveBeenCalledWith( undefined );
-        expect( renderToHtmlAndDomifyB ).toHaveBeenCalledWith( dataFromParentPrev );
+      it('update state to avoid rendering till another Comp is scheduled for rendering', () => {
+        expect( GameGUI.prototype.render.call( gameGUIMock ) ).toBe( false );
       });
 
       it('call all the Render Event Handlers passed in externally, right after all Comps in the queue is rendered.', () => {
@@ -262,22 +286,6 @@ describe('Game GUI', () => {
       expect( typeof errorMsg !== 'undefined' ).toBe( true );
     });
 
-    it('Should add Comp passed in to Render Queue by id', () => {
-      // const renderToHtmlAndDomifyA = jest.fn();
-      // const compA                  = {
-      //   id:                    'compA',
-      //   renderToHtmlAndDomify: renderToHtmlAndDomifyA,
-      // };
-      //
-      // const gameGUIMock = {
-      //   isRenderingDue: false,
-      //   listOnRender: [],
-      //   listObjIdRenderingScheduled: {}
-      // };
-      //
-      // GameGUI.prototype.scheduleRendering.call( gameGUIMock, compA );
-    });
-
     it('Should add Comp passed in to Render Queue and should be rendered at next available render time', () => {
       const renderToHtmlAndDomifyA = jest.fn();
       const compA                  = {
@@ -285,16 +293,28 @@ describe('Game GUI', () => {
               renderToHtmlAndDomify: renderToHtmlAndDomifyA,
             };
 
-      const gameGUIMock = {
-        isRenderingDue: false,
-        listOnRender: [],
-        listObjIdRenderingScheduled: {}
-      };
+      const gameGUIMock = createMockGameGuiInstance();
 
       GameGUI.prototype.scheduleRendering.call( gameGUIMock, compA );
       GameGUI.prototype.render.call( gameGUIMock );
 
       expect( renderToHtmlAndDomifyA ).toHaveBeenCalled();
     });
+  });
+
+  it('Should register and retrieve Comps.', () => {
+    const compA                  = {
+      id:                    'compAId',
+      type:                  'compA',
+    };
+
+    const gameGUIMock = createMockGameGuiInstance();
+
+    GameGUI.prototype.indexComp.call( gameGUIMock, compA );
+
+    expect( GameGUI.prototype.getCompById.call(       gameGUIMock, compA.id  )    ).toBe( compA );
+    console.warn = jest.fn(); // omit deprecation warning.
+    expect( GameGUI.prototype.getCompByType.call(     gameGUIMock, compA.type)[0] ).toBe( compA );
+    expect( GameGUI.prototype.getListCompByType.call( gameGUIMock, compA.type)[0] ).toBe( compA );
   });
 });
