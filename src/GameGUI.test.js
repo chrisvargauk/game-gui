@@ -9,6 +9,14 @@ describe('Game GUI', () => {
     return gameGUIMock;
   };
 
+  const createMockComp = function () {
+    class RootCompMock {}
+    RootCompMock.prototype.type = 'typeFake';
+    RootCompMock.prototype.id   = 'idFake';
+
+    return RootCompMock;
+  };
+
   describe('Constructor', () => {
     // Make a copy to overwrite methods that we are not interested testing for now
     class GameGUICopy extends GameGUI {
@@ -23,7 +31,7 @@ describe('Game GUI', () => {
       GameGUICopy.prototype.init =        jest.fn();
       GameGUICopy.prototype.regRootComp = jest.fn();
       GameGUICopy.prototype.render =      jest.fn();
-      const RootCompMock = {};
+      const RootCompMock = createMockComp();
       gameGui = new GameGUICopy( RootCompMock, '#ui-rout', {});
     });
 
@@ -64,7 +72,7 @@ describe('Game GUI', () => {
     global.setInterval = jest.fn();
 
     beforeAll(() => {
-      const RootCompMock = {};
+      const RootCompMock = createMockComp();
       gameGui = new GameGUICopy( RootCompMock, '#ui-rout', option);
     });
 
@@ -103,7 +111,7 @@ describe('Game GUI', () => {
       setInterval: jest.fn(() => 'fakeToken'),
     };
 
-    const RootCompMock = {};
+    const RootCompMock = createMockComp();
     gameGui = new GameGUICopy( RootCompMock, '#ui-rout', option);
 
     expect(global.interval.setInterval).toHaveBeenCalled();
@@ -115,25 +123,18 @@ describe('Game GUI', () => {
   });
 
   describe('regRootComp', () => {
-    it('Should throw if Root DOM Element doesn\'t exist', () => {
-      global.document.querySelector = () => null;
-      const RootCompMock = {};
+    it('Should register DOM Root', () => {
+      document.querySelector = jest.fn(() => ({
+        foo: 'bar',
+        insertAdjacentElement: jest.fn(),
+      }));
+      const gameGUIMock = createMockGameGuiInstance();
+      const RootCompMock  = createMockComp();
 
-      let errorMsg = false;
-      try {
-        GameGUI.prototype.regRootComp.call(null, RootCompMock, '#ui-rout-fake');
-      } catch( err ) {
-        errorMsg = err.message;
-      }
+      GameGUI.prototype.regRootComp.call(gameGUIMock, RootCompMock, '#ui-rout-mock');
 
-      expect(typeof errorMsg).toBe('string');
-
-      jest.restoreAllMocks();
+      expect( GameGUI.prototype.getDomRoot.call(gameGUIMock).foo ).toBe('bar');
     });
-
-    // it('Should register DOM Root', () => {
-    //
-    // });
 
     it('Throws if provided GUI Root Selector points to non-existent DOM Element.', () => {
       let errorMsg = false;
@@ -153,11 +154,9 @@ describe('Game GUI', () => {
       document.querySelector = jest.fn(() => ({
         insertAdjacentElement: jest.fn(),
       }));
-      const gameGUIMock = {
-        scheduleRendering: jest.fn(),
-        indexComp: jest.fn(),
-      };
-      class RootCompMock {}
+      const gameGUIMock   = createMockGameGuiInstance();
+      const RootCompMock  = createMockComp();
+
       GameGUI.prototype.regRootComp.call(gameGUIMock, RootCompMock, '#ui-rout');
 
       expect(gameGUIMock.rootComp instanceof RootCompMock).toBe(true);
@@ -171,7 +170,7 @@ describe('Game GUI', () => {
         scheduleRendering: jest.fn(() => 'scheduleRendering'),
         indexComp: jest.fn(() => 'indexComp'),
       };
-      class RootCompMock {}
+      const RootCompMock = createMockComp();
       GameGUI.prototype.regRootComp.call(gameGUIMock, RootCompMock, '#ui-rout');
 
       expect(gameGUIMock.rootComp.scheduleRendering()).toBe('scheduleRendering');
@@ -182,22 +181,71 @@ describe('Game GUI', () => {
       document.querySelector = jest.fn(() => ({
         insertAdjacentElement: jest.fn(),
       }));
-      const gameGUIMock = {
-        listObjTypeComp:    {},
-        listObjIdComp:      {},
-        scheduleRendering:  jest.fn(),
-        indexComp:          GameGUI.prototype.indexComp,
-      };
-      class RootCompMock {
-        constructor() {
-          this.type = 'typeFake';
-          this.id   = 'idFake';
-        }
-      }
+      const gameGUIMock = createMockGameGuiInstance();
+      const RootCompMock = createMockComp();
       GameGUI.prototype.regRootComp.call(gameGUIMock, RootCompMock, '#ui-rout');
 
       expect( gameGUIMock.listObjTypeComp.typeFake instanceof Array).toBe( true );
       expect( gameGUIMock.listObjTypeComp.typeFake[0] instanceof RootCompMock ).toBe( true );
+    });
+
+    it('Should schedule rendering of Root Comp when it is getting registered.', () => {
+      document.querySelector = jest.fn(() => ({
+        insertAdjacentElement: jest.fn(),
+      }));
+      const gameGUIMock = createMockGameGuiInstance();
+      const RootCompMock = createMockComp();
+      GameGUI.prototype.regRootComp.call(gameGUIMock, RootCompMock, '#ui-rout');
+
+      expect( gameGUIMock.isRenderingDue ).toBe( true );
+      expect( gameGUIMock.listObjIdRenderingScheduled[RootCompMock.prototype.id] instanceof RootCompMock ).toBe( true );
+    });
+
+    it('Should inject Root Comps html representation into DOM Root HTML Element.', () => {
+      // Note: This functionality can't be tested yet because implementation uses "insertAdjacentElement",
+      // and that is not supported by Jest yet.
+      expect( true ).toBe( true );
+    });
+  });
+
+  describe('scheduleRendering', () => {
+    it('Should throw if no Comp is passed in.', () => {
+      let errorMsg;
+      try {
+        GameGUI.prototype.scheduleRendering.call( undefined );
+      } catch ( err ) {
+        errorMsg = err;
+      }
+
+      expect( typeof errorMsg !== 'undefined' ).toBe( true );
+    });
+
+    it('Should throw if non-standard Comp is passed in.', () => {
+      const comp = {};
+
+      let errorMsg;
+      try {
+        GameGUI.prototype.scheduleRendering.call( null, comp );
+      } catch ( err ) {
+        errorMsg = err;
+      }
+
+      expect( typeof errorMsg !== 'undefined' ).toBe( true );
+    });
+
+    it('Should add Comp passed in to Render Queue and should be rendered at next available render time', () => {
+      const renderToHtmlAndDomifyA = jest.fn();
+      const compA                  = {
+        id:                    'compA',
+        renderToHtmlAndDomify: renderToHtmlAndDomifyA,
+      };
+
+      const gameGUIMock = createMockGameGuiInstance();
+
+      GameGUI.prototype.scheduleRendering.call( gameGUIMock, compA );
+      GameGUI.prototype.render.call( gameGUIMock );
+
+      expect( renderToHtmlAndDomifyA ).toHaveBeenCalled();
     });
   });
 
@@ -261,47 +309,6 @@ describe('Game GUI', () => {
     });
   });
 
-  describe('scheduleRendering', () => {
-    it('Should throw if no Comp is passed in.', () => {
-      let errorMsg;
-      try {
-        GameGUI.prototype.scheduleRendering.call( undefined );
-      } catch ( err ) {
-        errorMsg = err;
-      }
-
-      expect( typeof errorMsg !== 'undefined' ).toBe( true );
-    });
-
-    it('Should throw if non-standard Comp is passed in.', () => {
-      const comp = {};
-
-      let errorMsg;
-      try {
-        GameGUI.prototype.scheduleRendering.call( null, comp );
-      } catch ( err ) {
-        errorMsg = err;
-      }
-
-      expect( typeof errorMsg !== 'undefined' ).toBe( true );
-    });
-
-    it('Should add Comp passed in to Render Queue and should be rendered at next available render time', () => {
-      const renderToHtmlAndDomifyA = jest.fn();
-      const compA                  = {
-              id:                    'compA',
-              renderToHtmlAndDomify: renderToHtmlAndDomifyA,
-            };
-
-      const gameGUIMock = createMockGameGuiInstance();
-
-      GameGUI.prototype.scheduleRendering.call( gameGUIMock, compA );
-      GameGUI.prototype.render.call( gameGUIMock );
-
-      expect( renderToHtmlAndDomifyA ).toHaveBeenCalled();
-    });
-  });
-
   it('Should register and retrieve Comps.', () => {
     const compA                  = {
       id:                    'compAId',
@@ -316,5 +323,18 @@ describe('Game GUI', () => {
     console.warn = jest.fn(); // omit deprecation warning.
     expect( GameGUI.prototype.getCompByType.call(     gameGUIMock, compA.type)[0] ).toBe( compA );
     expect( GameGUI.prototype.getListCompByType.call( gameGUIMock, compA.type)[0] ).toBe( compA );
+  });
+
+  describe('indexComp', () => {
+    it('Should Index Comps by Type', () => {
+      const CompMock = createMockComp();
+      const compMock = new CompMock();
+      const gameGUIMock = createMockGameGuiInstance();
+
+      GameGUI.prototype.indexComp.call( gameGUIMock, compMock );
+
+      expect( gameGUIMock.listObjTypeComp[CompMock.prototype.type] instanceof Array).toBe( true );
+      expect( gameGUIMock.listObjTypeComp[CompMock.prototype.type][0] instanceof CompMock ).toBe( true );
+    });
   });
 });

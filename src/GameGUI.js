@@ -50,9 +50,9 @@ export class GameGUI {
     }
   }
 
-  regRootComp (RootComp, selectorGuiRoot) {
+  regRootComp ( RootComp, selectorGuiRoot ) {
     // Get UI Root
-    this.domRoot = document.querySelector(selectorGuiRoot);
+    this.domRoot = document.querySelector( selectorGuiRoot );
 
     // Throws if Root DOM Element doesn't exist
     if (this.domRoot === null) {
@@ -144,7 +144,7 @@ export class GameGUI {
   }
 
   getListCompByType ( type ) {
-      return this.listObjTypeComp[ type ];
+    return this.listObjTypeComp[ type ];
   }
 
   getCompById ( id ) {
@@ -152,7 +152,7 @@ export class GameGUI {
   }
 
   getDomRoot() {
-    this.domRoot;
+    return this.domRoot;
   }
 }
 
