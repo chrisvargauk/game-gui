@@ -1,5 +1,5 @@
 export class Component {
-  constructor ( option, config = {}) {
+  constructor ( option = {}, config = {}) {
     this.option                     = option;
     this.config                     = config;
     this.id                         = typeof config.id !== 'undefined' ? config.id : this.uid();
@@ -13,13 +13,56 @@ export class Component {
     this.dataFromParentAsStringPrev = undefined;
   }
 
+  getTypeOfComp ( comp ) {
+    // Issue: Babel transpiles MyCompName to MyCompName_ImportedCompName. We are filtering this off here.
+    //        If we ignored this, the code wouldn't be compilable.
+    const type = Object.getPrototypeOf(comp).constructor.name;
+    const listTypePart = type.split('_');
+    return listTypePart[ listTypePart.length -1 ];
+  }
+
   createDomElement ( type, id ) {
     const domElement = document.createElement('div');
-    domElement.classList.add( this.camelCaseToNakeCase( type ) );
+    domElement.classList.add( this.camelCaseToSnakeCase( type ) );
     domElement.setAttribute('id', id);
 
     return domElement;
   }
+
+  include ( ClassComp, dataFromParent, config ) {
+    // If Smart Comp (Class)
+    if ( ClassComp.prototype instanceof Component ) {
+      this.ctrChild++;
+      var nameComp  = ClassComp.name;
+      var compChild = this.listObjCompChild[ this.ctrChild ];
+
+      // Create new instance of Comp only if it hasn't been created yet
+      if ( typeof compChild === 'undefined' ) {
+        compChild = this.listObjCompChild[ this.ctrChild ] = new ClassComp( this.option, config );
+        compChild.dataFromParent = dataFromParent;
+
+        // Hook up Game GUI Methods: scheduler, indexComp
+        // Note: make sure you dont bind this, you need scheduler to resolve to ui framework,
+        //       and not to comp instance.
+        //       These hooked up methods wont be called at constructon time,
+        //       therefore there is no problem hooking them up after Comp Instantiation.
+        compChild.scheduleRendering = this.scheduleRendering;
+        compChild.indexComp         = this.indexComp;
+
+        // Index Comp right after its created and even before its rendered.
+        // Note: The rendering of Root Comp will trigger the indexing of all Sub Comps.
+        this.indexComp( compChild );
+      }
+
+      compChild.renderToHtmlAndDomify( compChild.dataFromParent );
+
+      return `<div class="comp-placeholder" type="${nameComp}" ctr-child="${this.ctrChild}"></div>`;
+
+      // If Dumb Comp (Function)
+    } else {
+      return ClassComp( dataFromParent, this.option );
+    }
+  };
 
   renderToHtmlAndDomify ( dataFromParent ) {
     // Skip if Data Passed in from Parent Comp. is the same
@@ -132,41 +175,6 @@ export class Component {
     }
   };
 
-  include ( ClassComp, dataFromParent, config ) {
-    // If Smart Comp (Class)
-    if ( ClassComp.prototype instanceof Component ) {
-      this.ctrChild++;
-      var nameComp  = ClassComp.name;
-      var compChild = this.listObjCompChild[ this.ctrChild ];
-
-      // Create new instance of Comp only if it hasn't been created yet
-      if ( typeof compChild === 'undefined' ) {
-        compChild = this.listObjCompChild[ this.ctrChild ] = new ClassComp( this.option, config );
-        compChild.dataFromParent = dataFromParent;
-
-        // Hook up Game GUI Methods: scheduler, indexComp
-        // Note: make sure you dont bind this, you need scheduler to resolve to ui framework,
-        //       and not to comp instance.
-        //       These hooked up methods wont be called at constructon time,
-        //       therefore there is no problem hooking them up after Comp Instantiation.
-        compChild.scheduleRendering = this.scheduleRendering;
-        compChild.indexComp         = this.indexComp;
-
-        // Index Comp right after its created and even before its rendered.
-        // Note: The rendering of Root Comp will trigger the indexing of all Sub Comps.
-        this.indexComp( compChild );
-      }
-
-      compChild.renderToHtmlAndDomify( compChild.dataFromParent );
-
-      return `<div class="comp-placeholder" type="${nameComp}" ctr-child="${this.ctrChild}"></div>`;
-
-    // If Dumb Comp (Function)
-    } else {
-      return ClassComp( dataFromParent, this.option );
-    }
-  };
-
   doBind () {
     // ui-click | Do click handler bindings automatically right after rendering
     // Note: Binding happens before Child Comps are injected so Encapsulation is unharmed
@@ -201,20 +209,12 @@ export class Component {
   // # Utility
   // # #######
 
-  camelCaseToNakeCase (str) {
+  camelCaseToSnakeCase (str) {
     return str.replace(/([a-zA-Z])(?=[A-Z])/g, '$1-').toLowerCase()
   }
 
   uid () {
     return Date.now()+''+Math.round(Math.random() * 100000);
-  }
-
-  getTypeOfComp ( comp ) {
-    // Issue: Babel transpiles MyCompName to MyCompName_ImportedCompName. We are filtering this off here.
-    //        If we ignored this, the code wouldn't be compilable.
-    const type = Object.getPrototypeOf(comp).constructor.name;
-    const listTypePart = type.split('_');
-    return listTypePart[ listTypePart.length -1 ];
   }
 }
 
