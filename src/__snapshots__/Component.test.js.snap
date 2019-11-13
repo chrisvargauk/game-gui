@@ -1,32 +1,15 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Component Should have rest of the default props set correctly 1`] = `
+exports[`Component constructor Should have the rest of the default props set correctly 1`] = `
 ComponentTest {
-  "config": Object {},
+  "config": Object {
+    "id": "static-id-for-test-sake",
+  },
   "ctrChild": -1,
   "dataFromParentAsStringPrev": undefined,
   "dom": <div
     class="component-test"
-    id="15723215432609177"
-  />,
-  "html": "",
-  "id": "static-id-for-test-sake",
-  "isStateUpdated": false,
-  "listObjCompChild": Object {},
-  "option": Object {},
-  "state": Object {},
-  "type": "ComponentTest",
-}
-`;
-
-exports[`Component constructor Should have rest of the default props set correctly 1`] = `
-ComponentTest {
-  "config": Object {},
-  "ctrChild": -1,
-  "dataFromParentAsStringPrev": undefined,
-  "dom": <div
-    class="component-test"
-    id="157232174580498610"
+    id="static-id-for-test-sake"
   />,
   "html": "",
   "id": "static-id-for-test-sake",

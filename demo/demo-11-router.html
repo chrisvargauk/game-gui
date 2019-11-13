@@ -47,9 +47,7 @@
   };
 
   class Rout extends GameGUI.Component {
-    constructor (option, config) {
-      super(option, config);
-
+    afterInstantiation () {
       gameGUIRouter.matchPath(this.config.path, () => {
         this.setState({
           timestampChange: Date.now(),

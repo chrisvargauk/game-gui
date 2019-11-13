@@ -9,9 +9,7 @@
 <script src="../dist/GameGUI.js"></script>
 <script>
   class MySubComp extends GameGUI.Component {
-    constructor (option, config) {
-      super(option, config);
-
+    afterInstantiation () {
       this.setState({
         ctr: 0
       });
@@ -22,6 +20,7 @@
         <fieldset class="my-sub-comp" ui-click="handlerUpdateLabel">
           <legend>SubComp:</legend>
           My Sub Comp - A - Timestamp changing at ReRendering: ${Date.now()} <br>
+          Ctr below is bumped up from 0 to 2 externally through provided API<br>
           Click Me: ${this.getState().ctr}
         </fieldset>
       `;

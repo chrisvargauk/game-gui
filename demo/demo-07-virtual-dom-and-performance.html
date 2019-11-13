@@ -9,9 +9,7 @@
 <script src="../dist/GameGUI.js"></script>
 <script>
   class MySubComp extends GameGUI.Component {
-    constructor () {
-      super();
-
+    afterInstantiation () {
       this.setState({
         ctr: 0
       });
@@ -36,9 +34,7 @@
   }
 
   class ParentComp extends GameGUI.Component {
-    constructor () {
-      super();
-
+    afterInstantiation () {
       this.setState({
         ctr: 0
       });

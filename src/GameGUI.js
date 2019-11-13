@@ -1,5 +1,5 @@
 export class GameGUI {
-  constructor(RootComp, selectorGuiRoot, option) {
+  constructor(RootComp, selectorGuiRoot, option, configRootComp) {
     // Reg Root Comp automatically if requirements are fulfilled
     // Note: don't run it by default, you may want to control the steps.
     if (typeof RootComp === 'undefined' ||
@@ -9,7 +9,7 @@ export class GameGUI {
     }
 
     this.init(option);
-    this.regRootComp(RootComp, selectorGuiRoot);
+    this.regRootComp(RootComp, selectorGuiRoot, configRootComp);
 
     // Call the very first render ASAP
     // Note:  Otherwise you might see a brief flash
@@ -50,7 +50,7 @@ export class GameGUI {
     }
   }
 
-  regRootComp ( RootComp, selectorGuiRoot ) {
+  regRootComp ( RootComp, selectorGuiRoot, configRootComp ) {
     // Get UI Root
     this.domRoot = document.querySelector( selectorGuiRoot );
 
@@ -60,7 +60,7 @@ export class GameGUI {
     }
 
     // Instantiate Root Comp
-    this.rootComp = new RootComp( this.option );
+    this.rootComp = new RootComp( this.option, configRootComp );
 
     // Hook up Game GUI Methods: scheduler, indexComp
     // Note: we dont want to pass in scheduler into comps, we want to keep comp constructor clean,

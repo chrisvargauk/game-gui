@@ -1,16 +1,24 @@
 export class Component {
-  constructor ( option = {}, config = {}) {
+  constructor ( option = {}, config = {}, dataFromParent = {} ) {
+    // Note: "option" and "config" are registered at first include when Comp is instantiated.
+    //       These props wont be updated even if then change at subsequent rerenderings.
     this.option                     = option;
     this.config                     = config;
+
     this.id                         = typeof config.id !== 'undefined' ? config.id : this.uid();
     this.type                       = this.getTypeOfComp(this);
-    this.dom                        = this.createDomElement ( this.type, this.id );
+    this.dom                        = this.createDomRepresentation ( this.type, this.id );
     this.listObjCompChild           = {};
     this.html                       = '';
     this.ctrChild                   = -1;
     this.state                      = {};
     this.isStateUpdated             = false;
     this.dataFromParentAsStringPrev = undefined;
+
+    // Run Life Cycle Method if defined on Comp Instance
+    if  (typeof this.afterInstantiation !== 'undefined') {
+      this.afterInstantiation( dataFromParent );
+    }
   }
 
   getTypeOfComp ( comp ) {
@@ -21,7 +29,7 @@ export class Component {
     return listTypePart[ listTypePart.length -1 ];
   }
 
-  createDomElement ( type, id ) {
+  createDomRepresentation ( type, id ) {
     const domElement = document.createElement('div');
     domElement.classList.add( this.camelCaseToSnakeCase( type ) );
     domElement.setAttribute('id', id);
@@ -29,6 +37,21 @@ export class Component {
     return domElement;
   }
 
+  render() {
+    return `<span>Placeholder text for Comp ${this.type}</span>`;
+  }
+
+  /**
+   * Syntax: ..${this.include(ClassComp, dataFromParent, config)}
+   * Use "include" inside any "render" method to embed Comps inside Comps.
+   * It returns a Placeholder HTML Snippet, that is included in the Parent Comps DOM till
+   * the next Game GUI Render Event will call "renderToHtmlAndDomify" on Parent Comp,
+   * when all Placeholder HTML Snippet will be replaced with the relevant Included Comps DOM.
+   * @param ClassComp
+   * @param dataFromParent
+   * @param config
+   * @returns {string|*}
+   */
   include ( ClassComp, dataFromParent, config ) {
     // If Smart Comp (Class)
     if ( ClassComp.prototype instanceof Component ) {
@@ -38,8 +61,17 @@ export class Component {
 
       // Create new instance of Comp only if it hasn't been created yet
       if ( typeof compChild === 'undefined' ) {
-        compChild = this.listObjCompChild[ this.ctrChild ] = new ClassComp( this.option, config );
-        compChild.dataFromParent = dataFromParent;
+        compChild = this.listObjCompChild[ this.ctrChild ] = new ClassComp( this.option, config, dataFromParent );
+        // Note: "option" is a global in the scope of Game GUI, therefore we pass it along to every Child Comp,
+        //       hence making it available in every Comp through "this.option".
+        //       "config" and "dataFromParent" on the other hand are specific to each Comp,
+        //       therefore we pass in a new one at every include, unlike we do with "option".
+        //       "option" and "config" both are registered when the Comp is instantiated (at first inclusion),
+        //       then we never update them again, even if we include them multiple times with different config,
+        //       that won't effect the original config. Therefore, you are welcome to modify it (e.g. in constructor)
+        //       after Comp is instantiated, those modifications will remain.
+        //       "dataFromParent" on the other hand will be update and passed in to "render" method,
+        //       every time the Parent Comp is re-rendered.
 
         // Hook up Game GUI Methods: scheduler, indexComp
         // Note: make sure you dont bind this, you need scheduler to resolve to ui framework,
@@ -54,29 +86,42 @@ export class Component {
         this.indexComp( compChild );
       }
 
-      compChild.renderToHtmlAndDomify( compChild.dataFromParent );
+      compChild.renderToHtmlAndDomify( dataFromParent );
+      // Note: "dataFromParent" from Parent Comp is updated in Child Comp by "include", but
+      //       "config" and "option" are not, they are passed in only at first inclusion (at Comp Instantiation)
 
-      return `<div class="comp-placeholder" type="${nameComp}" ctr-child="${this.ctrChild}"></div>`;
+      return `<div class="comp-placeholder" type="${nameComp}" ctr-child="${this.ctrChild}">placeholder text</div>`;
 
-      // If Dumb Comp (Function)
+    // If Dumb Comp (Function)
     } else {
       return ClassComp( dataFromParent, this.option );
     }
   };
 
   renderToHtmlAndDomify ( dataFromParent ) {
-    // Skip if Data Passed in from Parent Comp. is the same
-    // or if State has changed
+    // Optimise Rendering to HTML
+    // Note: Comp HTML Representation can change one of two ways:
+    //       A) Data Passed in from Parent Comp has changed
+    //       B) State has changed
+    //       C) HTML Representation of Comp has never been created before, therefore
+    //          what ever we render will be different from current HTML Representation of the Comp.
+    //
+    // Don't skip if HTML representation of Comp has never been rendered yet.
     if ( this.html !== '' ) {
       const renderBecauseDataPassedInChanged = this.isRenderBecauseDataPassedInChanged ( dataFromParent );
+
+      // Skip only if Data Passed In From Parent Comp hasen't changed and the sate of the Comp hasen't changed either
       if ( !renderBecauseDataPassedInChanged &&
-        !this.isStateUpdated
+           !this.isStateUpdated
       ) {
         return false;
       }
-    } else if (typeof dataFromParent !== 'undefined') {
-      this.dataFromParentAsStringPrev = JSON.stringify( dataFromParent );
     }
+
+    // Note: Record of Data Passed In From Parent has already been updated by "isRenderBecauseDataPassedInChanged"
+    //       because we have already stringified Data Passed In From Parent in "isRenderBecauseDataPassedInChanged",
+    //       therefore we don't want to do it twice, efficiency
+    // this.dataFromParentAsStringPrev = JSON.stringify( dataFromParent );
 
     // Render to HTML String
     this.ctrChild       = -1;
@@ -85,6 +130,8 @@ export class Component {
     this.ctrChild       = -1;
 
     // Skip ReDomify if Comp Shallow Render looks the same
+    // Note: if the Data Passed In From Parent has changed and/or Comp State has changed,
+    //       that doesnt necessarily mean that the rendered html is different
     if ( htmlNewRender === this.html) {
       return false;
     }
@@ -109,49 +156,43 @@ export class Component {
   }
 
   isRenderBecauseDataPassedInChanged ( dataFromParent ) {
+    const isUndefinedDataFromParentAsStringPrev = typeof this.dataFromParentAsStringPrev === 'undefined';
+    const isUndefinedDataFromParentAsString     = typeof dataFromParent                  === 'undefined';
+
     // Scenario 1)  prev === undefined && passed === undefined --> DON'T RENDER
-    if ( typeof this.dataFromParentAsStringPrev === 'undefined' &&
-      typeof dataFromParent                  === 'undefined'
+    if ( isUndefinedDataFromParentAsStringPrev &&
+         isUndefinedDataFromParentAsString
     ) {
       return false;
     }
 
-    // Scenario 2)  prev !== undefined && passed === undefined --> RENDER
-    if ( typeof this.dataFromParentAsStringPrev !== 'undefined' &&
-      typeof dataFromParent                  === 'undefined'
+    const dataFromParentAsString = JSON.stringify( dataFromParent );
+
+    // Scenario 2)  prev === undefined && passed !== undefined --> RENDER
+    if ( isUndefinedDataFromParentAsStringPrev &&
+         !isUndefinedDataFromParentAsString
     ) {
-      this.dataFromParentAsStringPrev = dataFromParent;
+      this.dataFromParentAsStringPrev = dataFromParentAsString;
       return true;
     }
 
-    // Scenario 3)  prev === undefined && passed !== undefined --> COMPARE
-    if ( typeof this.dataFromParentAsStringPrev === 'undefined' &&
-      typeof dataFromParent                  !== 'undefined'
+    // Scenario 3)  prev !== undefined && passed === undefined --> RENDER
+    if ( !isUndefinedDataFromParentAsStringPrev &&
+         isUndefinedDataFromParentAsString
     ) {
-      const dataFromParentAsString = JSON.stringify( dataFromParent );
-
-      // Compare / same       --> DON'T RENDER
-      if ( this.dataFromParentAsStringPrev === dataFromParentAsString) {
-        return false;
-
-        // Compare / different  --> RENDER
-      } else {
-        this.dataFromParentAsStringPrev = dataFromParentAsString;
-        return true;
-      }
+      this.dataFromParentAsStringPrev = dataFromParentAsString;
+      return true;
     }
 
     // Scenario 4)  prev !== undefined && passed !== undefined --> COMPARE
-    if ( typeof this.dataFromParentAsStringPrev !== 'undefined' &&
-         typeof dataFromParent                  !== 'undefined'
+    if ( !isUndefinedDataFromParentAsStringPrev &&
+         !isUndefinedDataFromParentAsString
     ) {
-      const dataFromParentAsString = JSON.stringify( dataFromParent );
-
       // Compare / same       --> DON'T RENDER
       if ( this.dataFromParentAsStringPrev === dataFromParentAsString) {
         return false;
 
-        // Compare / different  --> RENDER
+      // Compare / different  --> RENDER
       } else {
         this.dataFromParentAsStringPrev = dataFromParentAsString;
         return true;

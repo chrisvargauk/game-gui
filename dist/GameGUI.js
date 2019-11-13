@@ -107,27 +107,93 @@ return /******/ (function(modules) { // webpackBootstrap
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Component", function() { return Component; });
 class Component {
-  constructor ( option, config = {}) {
+  constructor ( option = {}, config = {}, dataFromParent = {} ) {
     this.option                     = option;
     this.config                     = config;
+    this.dataFromParent             = dataFromParent;
     this.id                         = typeof config.id !== 'undefined' ? config.id : this.uid();
     this.type                       = this.getTypeOfComp(this);
-    this.dom                        = this.createDomElement ( this.type, this.id );
+    this.dom                        = this.createDomRepresentation ( this.type, this.id );
     this.listObjCompChild           = {};
     this.html                       = '';
     this.ctrChild                   = -1;
     this.state                      = {};
     this.isStateUpdated             = false;
     this.dataFromParentAsStringPrev = undefined;
+
+    // Run Life Cycle Method if defined on Comp Instance
+    if  (typeof this.afterInstantiation !== 'undefined') {
+      this.afterInstantiation();
+    }
   }
 
-  createDomElement ( type, id ) {
+  getTypeOfComp ( comp ) {
+    // Issue: Babel transpiles MyCompName to MyCompName_ImportedCompName. We are filtering this off here.
+    //        If we ignored this, the code wouldn't be compilable.
+    const type = Object.getPrototypeOf(comp).constructor.name;
+    const listTypePart = type.split('_');
+    return listTypePart[ listTypePart.length -1 ];
+  }
+
+  createDomRepresentation ( type, id ) {
     const domElement = document.createElement('div');
-    domElement.classList.add( this.camelCaseToNakeCase( type ) );
+    domElement.classList.add( this.camelCaseToSnakeCase( type ) );
     domElement.setAttribute('id', id);
 
     return domElement;
   }
+
+  render() {
+    return `<span>Placeholder text for Comp ${this.type}</span>`;
+  }
+
+  /**
+   * Syntax: ..${this.include(ClassComp, dataFromParent, config)}
+   * Use "include" inside any "render" method to embed Comps inside Comps.
+   * It returns a Placeholder HTML Snippet, that is included in the Parent Comps DOM till
+   * the next Game GUI Render Event will call "renderToHtmlAndDomify" on Parent Comp,
+   * when all Placeholder HTML Snippet will be replaced with the relevant Included Comps DOM.
+   * @param ClassComp
+   * @param dataFromParent
+   * @param config
+   * @returns {string|*}
+   */
+  include ( ClassComp, dataFromParent, config ) {
+    // If Smart Comp (Class)
+    if ( ClassComp.prototype instanceof Component ) {
+      this.ctrChild++;
+      var nameComp  = ClassComp.name;
+      var compChild = this.listObjCompChild[ this.ctrChild ];
+
+      // Create new instance of Comp only if it hasn't been created yet
+      if ( typeof compChild === 'undefined' ) {
+        compChild = this.listObjCompChild[ this.ctrChild ] = new ClassComp( this.option, config, dataFromParent );
+        // compChild.option          = this.option     || {};
+        // compChild.opconfigtion    = this.config     || {};
+        // compChild.dataFromParent  = dataFromParent  || {};
+
+        // Hook up Game GUI Methods: scheduler, indexComp
+        // Note: make sure you dont bind this, you need scheduler to resolve to ui framework,
+        //       and not to comp instance.
+        //       These hooked up methods wont be called at constructon time,
+        //       therefore there is no problem hooking them up after Comp Instantiation.
+        compChild.scheduleRendering = this.scheduleRendering;
+        compChild.indexComp         = this.indexComp;
+
+        // Index Comp right after its created and even before its rendered.
+        // Note: The rendering of Root Comp will trigger the indexing of all Sub Comps.
+        this.indexComp( compChild );
+      }
+
+      compChild.renderToHtmlAndDomify( compChild.dataFromParent );
+
+      return `<div class="comp-placeholder" type="${nameComp}" ctr-child="${this.ctrChild}">placeholder text</div>`;
+
+      // If Dumb Comp (Function)
+    } else {
+      return ClassComp( dataFromParent, this.option );
+    }
+  };
 
   renderToHtmlAndDomify ( dataFromParent ) {
     // Skip if Data Passed in from Parent Comp. is the same
@@ -240,41 +306,6 @@ class Component {
     }
   };
 
-  include ( ClassComp, dataFromParent, config ) {
-    // If Smart Comp (Class)
-    if ( ClassComp.prototype instanceof Component ) {
-      this.ctrChild++;
-      var nameComp  = ClassComp.name;
-      var compChild = this.listObjCompChild[ this.ctrChild ];
-
-      // Create new instance of Comp only if it hasn't been created yet
-      if ( typeof compChild === 'undefined' ) {
-        compChild = this.listObjCompChild[ this.ctrChild ] = new ClassComp( this.option, config );
-        compChild.dataFromParent = dataFromParent;
-
-        // Hook up Game GUI Methods: scheduler, indexComp
-        // Note: make sure you dont bind this, you need scheduler to resolve to ui framework,
-        //       and not to comp instance.
-        //       These hooked up methods wont be called at constructon time,
-        //       therefore there is no problem hooking them up after Comp Instantiation.
-        compChild.scheduleRendering = this.scheduleRendering;
-        compChild.indexComp         = this.indexComp;
-
-        // Index Comp right after its created and even before its rendered.
-        // Note: The rendering of Root Comp will trigger the indexing of all Sub Comps.
-        this.indexComp( compChild );
-      }
-
-      compChild.renderToHtmlAndDomify( compChild.dataFromParent );
-
-      return `<div class="comp-placeholder" type="${nameComp}" ctr-child="${this.ctrChild}"></div>`;
-
-    // If Dumb Comp (Function)
-    } else {
-      return ClassComp( dataFromParent, this.option );
-    }
-  };
-
   doBind () {
     // ui-click | Do click handler bindings automatically right after rendering
     // Note: Binding happens before Child Comps are injected so Encapsulation is unharmed
@@ -309,20 +340,12 @@ class Component {
   // # Utility
   // # #######
 
-  camelCaseToNakeCase (str) {
+  camelCaseToSnakeCase (str) {
     return str.replace(/([a-zA-Z])(?=[A-Z])/g, '$1-').toLowerCase()
   }
 
   uid () {
     return Date.now()+''+Math.round(Math.random() * 100000);
-  }
-
-  getTypeOfComp ( comp ) {
-    // Issue: Babel transpiles MyCompName to MyCompName_ImportedCompName. We are filtering this off here.
-    //        If we ignored this, the code wouldn't be compilable.
-    const type = Object.getPrototypeOf(comp).constructor.name;
-    const listTypePart = type.split('_');
-    return listTypePart[ listTypePart.length -1 ];
   }
 }
 
@@ -347,7 +370,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Router", function() { return _GameGUIRouter__WEBPACK_IMPORTED_MODULE_1__["Router"]; });
 
 class GameGUI {
-  constructor(RootComp, selectorGuiRoot, option) {
+  constructor(RootComp, selectorGuiRoot, option, configRootComp) {
     // Reg Root Comp automatically if requirements are fulfilled
     // Note: don't run it by default, you may want to control the steps.
     if (typeof RootComp === 'undefined' ||
@@ -357,7 +380,7 @@ class GameGUI {
     }
 
     this.init(option);
-    this.regRootComp(RootComp, selectorGuiRoot);
+    this.regRootComp(RootComp, selectorGuiRoot, configRootComp);
 
     // Call the very first render ASAP
     // Note:  Otherwise you might see a brief flash
@@ -372,6 +395,7 @@ class GameGUI {
       fps: 60,
     };
 
+    // Should compose option from default options, and options passed in at construction
     this.option = {
       ...this.optionDefault,
       ...option,
@@ -384,9 +408,8 @@ class GameGUI {
     this.listObjTypeComp = {};
     this.listObjIdComp = {};
 
-    this.listObjCallback = {
-      listOnRender: [],
-    };
+    // Store and call from the list of callbacks passed in to be run right after rendering(s) is complete.
+    this.listOnRender = [];
 
     // Note: Don't worry about calling render 60 times a sec,
     // render method start with "if(!this.isRenderingDue ) return;"
@@ -398,17 +421,17 @@ class GameGUI {
     }
   }
 
-  regRootComp (RootComp, selectorGuiRoot) {
+  regRootComp ( RootComp, selectorGuiRoot, configRootComp ) {
     // Get UI Root
-    this.domRoot = document.querySelector(selectorGuiRoot);
+    this.domRoot = document.querySelector( selectorGuiRoot );
 
-    // Skip if root DOM Element doesn't exist
+    // Throws if Root DOM Element doesn't exist
     if (this.domRoot === null) {
       throw('ERROR: DOM Root can\'t be found by using the provided selector: ' + selectorGuiRoot);
     }
 
     // Instantiate Root Comp
-    this.rootComp = new RootComp( this.option );
+    this.rootComp = new RootComp( this.option, configRootComp );
 
     // Hook up Game GUI Methods: scheduler, indexComp
     // Note: we dont want to pass in scheduler into comps, we want to keep comp constructor clean,
@@ -428,20 +451,25 @@ class GameGUI {
   };
 
   scheduleRendering (comp) {
+    if ( !comp || !comp.id ) {
+      throw('Non-standard Comp passed in to be scheduled. Comp is either undefined or Comp ID is undefined or null or Empty string etc..');
+    }
+
     this.isRenderingDue = true;
-    this.listObjIdRenderingScheduled[comp.id] = comp;
+    this.listObjIdRenderingScheduled[ comp.id ] = comp;
   };
 
   render () {
     // Skipp rendering if there was no change
     if (!this.isRenderingDue) {
-      return;
+      return false;
     }
 
     // Render any Comp. that is scheduled
     for (let idComp in this.listObjIdRenderingScheduled) {
       let comp = this.listObjIdRenderingScheduled[ idComp ];
 
+      // Recover stored data passed in from Parent Comp previously, and pass it along to Comp Rendering.
       let dataFromParentPrev = typeof comp.dataFromParentAsStringPrev !== 'undefined' ?
         JSON.parse( comp.dataFromParentAsStringPrev ) :
         undefined;
@@ -453,15 +481,17 @@ class GameGUI {
     this.isRenderingDue = false;
 
     // Call all the render event handlers passed in externally
-    if( 0 < this.listObjCallback.listOnRender.length ) {
-      for(let indexListOnRender=0; indexListOnRender<this.listObjCallback.listOnRender.length; indexListOnRender++) {
-        this.listObjCallback.listOnRender[ indexListOnRender ]();
+    if( 0 < this.listOnRender.length ) {
+      for(let indexListOnRender=0; indexListOnRender<this.listOnRender.length; indexListOnRender++) {
+        this.listOnRender[ indexListOnRender ]();
       }
     }
+
+    return true;
   };
 
   onRender ( callback ) {
-    this.listObjCallback.listOnRender.push( callback );
+    this.listOnRender.push( callback );
   }
 
   indexComp( comp ) {
@@ -479,11 +509,21 @@ class GameGUI {
   };
 
   getCompByType ( type ) {
+    // todo: feel free to remove remove after 20200101
+    console.warn('Deprecated: "getCompByType( type )". Use "getListCompByType( type )" instead. "getCompByType( type )" will not be supported after end of 2019.');
+    return this.listObjTypeComp[ type ];
+  }
+
+  getListCompByType ( type ) {
     return this.listObjTypeComp[ type ];
   }
 
   getCompById ( id ) {
     return this.listObjIdComp[ id ];
+  }
+
+  getDomRoot() {
+    return this.domRoot;
   }
 }
 

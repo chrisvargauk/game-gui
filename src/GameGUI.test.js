@@ -20,19 +20,24 @@ describe('Game GUI', () => {
   describe('Constructor', () => {
     // Make a copy to overwrite methods that we are not interested testing for now
     class GameGUICopy extends GameGUI {
-      constructor(RootComp, selectorGuiRoot, option) {
-        super(RootComp, selectorGuiRoot, option);
+      constructor(RootComp, selectorGuiRoot, option, configRootComp) {
+        super(RootComp, selectorGuiRoot, option, configRootComp);
       }
     }
 
-    let gameGui;
+    const selectorGuiRoot = '#ui-rout',
+          option          = {foo: 'foo'},
+          configRootComp  = {bar: 'bar'};
+
+    let gameGui,
+        RootCompMock;
 
     beforeAll(() => {
       GameGUICopy.prototype.init =        jest.fn();
       GameGUICopy.prototype.regRootComp = jest.fn();
       GameGUICopy.prototype.render =      jest.fn();
-      const RootCompMock = createMockComp();
-      gameGui = new GameGUICopy( RootCompMock, '#ui-rout', {});
+      RootCompMock = createMockComp();
+      gameGui = new GameGUICopy( RootCompMock, selectorGuiRoot, option, configRootComp);
     });
 
     it('Should instantiate Game GUI', () => {
@@ -45,6 +50,11 @@ describe('Game GUI', () => {
 
     it('Should start rendering immediately, in the same event loop.', () => {
       expect(gameGui.render).toHaveBeenCalled();
+    });
+
+    it('Should pass along attributes received', () => {
+      expect( GameGUICopy.prototype.init        ).toHaveBeenCalledWith( option );
+      expect( GameGUICopy.prototype.regRootComp ).toHaveBeenCalledWith( RootCompMock, selectorGuiRoot, configRootComp );
     });
 
     afterAll(() => {
@@ -162,8 +172,27 @@ describe('Game GUI', () => {
       expect(gameGUIMock.rootComp instanceof RootCompMock).toBe(true);
     });
 
+    it('Should provide "option" and "config" to Root Comp instantiation if available.', () => {
+      document.querySelector = jest.fn(() => ({
+        insertAdjacentElement: jest.fn(),
+      }));
+      const gameGUIMock   = createMockGameGuiInstance();
+      const configRootComp = {
+        foo: 'bar',
+      };
+
+      const RootCompMock = jest.fn();
+      RootCompMock.prototype.type = 'typeFake';
+      RootCompMock.prototype.id   = 'idFake';
+
+      GameGUI.prototype.regRootComp.call(gameGUIMock, RootCompMock, '#ui-rout', configRootComp);
+
+      expect( RootCompMock ).toHaveBeenCalledWith( gameGUIMock.option, configRootComp );
+    });
+
     it('Should hook up list of Game GUI method onto new Root Comp instance.', () => {
       document.querySelector = jest.fn(() => ({
+
         insertAdjacentElement: jest.fn(),
       }));
       const gameGUIMock = {

@@ -92,9 +92,7 @@ class MyComp extends Component {
 Use Smart Components if your UI element requires it's own state.
 ```javascript
 class MySmartComp extends Component {
-  constructor () {
-    super();
-
+  afterInstantiation () {
     this.setState({
       ctr: 0
     });
@@ -137,6 +135,31 @@ class MySmartComp extends Component {
 }
 ```
 
+Place your custom logic into `afterInstantiation()` Live Cycle Method instead of overwriting the constructor of your Comp.
+It will make your life easier, because it is called at the very end of the Comps constructor method, but
+by using `afterInstantiation()`, you don't have to pass along props, see below:
+```javascript
+class MySmartComp extends Component {
+  afterInstantiation( dataFromParent ) {
+    //..your logic comes here.. 
+  }
+
+  //...
+}
+
+// or..
+
+class MySmartComp extends Component {
+  constructor( option, config, dataFromParent ) {
+    super( option, config, dataFromParent );
+    
+    //..your logic comes here.. 
+  }
+
+  //...
+}
+```  
+ 
 ### Hook Up External Event Handlers
 Use `gui.onRender(yourEvtHandler);` to pass in as many OnRender Event Handlers as you like.
 These event handlers will be call every time when any part of the UI gets rerendered. 
