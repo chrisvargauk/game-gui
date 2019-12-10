@@ -6,13 +6,20 @@ export class Component {
     this.config                     = config;
 
     this.id                         = typeof config.id !== 'undefined' ? config.id : this.uid();
-    this.type                       = this.getTypeOfComp(this);
-    this.dom                        = this.createDomRepresentation ( this.type, this.id );
-    this.listObjCompChild           = {};
+    this.type                       = this.getTypeOfComp( this );
+    this.classNameInHtml            = this.camelCaseToSnakeCase( this.type );
+    this.dom                        = this.createDomRepresentation();
+                                      // Note: "this.dom" this is a wrapper element. The output of "this.render(..)"
+                                      // is placed inside this wrapper. The wrapper is created only once at
+                                      // Comp instantiation, but its content is created from scratch, then injected at
+                                      // every Comp Render call - at this.render(..).
+    this.listObjCompChildByType     = {}; // Cache previously rendered Comps here.
     this.html                       = '';
-    this.ctrChild                   = -1;
+    this.ctrChildByType             = {};
+
     this.state                      = {};
-    this.isStateUpdated             = false;
+    this.isStateUpdated             = false; // when Comp State is updated, this is set to true till
+                                             // State Change is rendered to HTML/DOM
     this.dataFromParentAsStringPrev = undefined;
 
     // Run Life Cycle Method if defined on Comp Instance
@@ -29,10 +36,10 @@ export class Component {
     return listTypePart[ listTypePart.length -1 ];
   }
 
-  createDomRepresentation ( type, id ) {
+  createDomRepresentation () {
     const domElement = document.createElement('div');
-    domElement.classList.add( this.camelCaseToSnakeCase( type ) );
-    domElement.setAttribute('id', id);
+    domElement.classList.add( this.classNameInHtml );
+    domElement.setAttribute('id', this.id);
 
     return domElement;
   }
@@ -55,13 +62,18 @@ export class Component {
   include ( ClassComp, dataFromParent, config ) {
     // If Smart Comp (Class)
     if ( ClassComp.prototype instanceof Component ) {
-      this.ctrChild++;
-      var nameComp  = ClassComp.name;
-      var compChild = this.listObjCompChild[ this.ctrChild ];
+      const typeComp = ClassComp.name;
+      const ctrChild = this.ctrChildByType[ typeComp ] = typeof this.ctrChildByType[ typeComp ] === 'undefined' ?
+                                                            0                                                   :
+                                                            ++this.ctrChildByType[ typeComp ];
+
+      const idCompChild = (config && typeof config.id !== 'undefined') ? config.id : ctrChild;
+      this.listObjCompChildByType[ typeComp ] = this.listObjCompChildByType[ typeComp ] || {};
+      let compChild = this.listObjCompChildByType[ typeComp ][ idCompChild ];
 
       // Create new instance of Comp only if it hasn't been created yet
       if ( typeof compChild === 'undefined' ) {
-        compChild = this.listObjCompChild[ this.ctrChild ] = new ClassComp( this.option, config, dataFromParent );
+        compChild = this.listObjCompChildByType[ typeComp ][ idCompChild ] = new ClassComp( this.option, config, dataFromParent );
         // Note: "option" is a global in the scope of Game GUI, therefore we pass it along to every Child Comp,
         //       hence making it available in every Comp through "this.option".
         //       "config" and "dataFromParent" on the other hand are specific to each Comp,
@@ -76,7 +88,7 @@ export class Component {
         // Hook up Game GUI Methods: scheduler, indexComp
         // Note: make sure you dont bind this, you need scheduler to resolve to ui framework,
         //       and not to comp instance.
-        //       These hooked up methods wont be called at constructon time,
+        //       These hooked up methods wont be called at construction time,
         //       therefore there is no problem hooking them up after Comp Instantiation.
         compChild.scheduleRendering = this.scheduleRendering;
         compChild.indexComp         = this.indexComp;
@@ -90,7 +102,9 @@ export class Component {
       // Note: "dataFromParent" from Parent Comp is updated in Child Comp by "include", but
       //       "config" and "option" are not, they are passed in only at first inclusion (at Comp Instantiation)
 
-      return `<div class="comp-placeholder" type="${nameComp}" ctr-child="${this.ctrChild}">placeholder text</div>`;
+      const idFromConfig = (config && typeof config.id !== 'undefined') ? config.id : '';
+
+      return `<div class="comp-placeholder" type="${typeComp}" id-from-config="${idFromConfig}" ctr-child="${ctrChild}">placeholder text</div>`;
 
     // If Dumb Comp (Function)
     } else {
@@ -100,39 +114,37 @@ export class Component {
 
   renderToHtmlAndDomify ( dataFromParent ) {
     // Optimise Rendering to HTML
-    // Note: Comp HTML Representation can change one of two ways:
+    // Note: Comp HTML Representation can change one of three ways:
     //       A) Data Passed in from Parent Comp has changed
     //       B) State has changed
     //       C) HTML Representation of Comp has never been created before, therefore
     //          what ever we render will be different from current HTML Representation of the Comp.
-    //
-    // Don't skip if HTML representation of Comp has never been rendered yet.
-    if ( this.html !== '' ) {
-      const renderBecauseDataPassedInChanged = this.isRenderBecauseDataPassedInChanged ( dataFromParent );
 
-      // Skip only if Data Passed In From Parent Comp hasen't changed and the sate of the Comp hasen't changed either
-      if ( !renderBecauseDataPassedInChanged &&
-           !this.isStateUpdated
-      ) {
-        return false;
-      }
+    const renderBecauseDataPassedInChanged = this.isRenderBecauseDataPassedInChanged ( dataFromParent );
+
+    // Don't skip if HTML representation of Comp has never been rendered yet.
+    // Skip only if Data Passed In From Parent Comp hasn't changed and the sate of the Comp hasn't changed either
+    if (this.html !== '' &&
+        !renderBecauseDataPassedInChanged &&
+        !this.isStateUpdated
+    ) {
+      return false;
     }
 
     // Note: Record of Data Passed In From Parent has already been updated by "isRenderBecauseDataPassedInChanged"
     //       because we have already stringified Data Passed In From Parent in "isRenderBecauseDataPassedInChanged",
     //       therefore we don't want to do it twice, efficiency
-    // this.dataFromParentAsStringPrev = JSON.stringify( dataFromParent );
+    // !! this.dataFromParentAsStringPrev = JSON.stringify( dataFromParent );
 
     // Render to HTML String
-    this.ctrChild       = -1;
+    this.ctrChildByType = {};
     var htmlNewRender   = this.render( dataFromParent );
-    this.isStateUpdated = false;
-    this.ctrChild       = -1;
+    this.isStateUpdated = false; // Updated Comp State is rendered to HTML/DOM at "this.render(..)", so we reset it here
 
     // Skip ReDomify if Comp Shallow Render looks the same
     // Note: if the Data Passed In From Parent has changed and/or Comp State has changed,
     //       that doesnt necessarily mean that the rendered html is different
-    if ( htmlNewRender === this.html) {
+    if ( htmlNewRender === this.html ) {
       return false;
     }
 
@@ -150,7 +162,7 @@ export class Component {
     }
 
     // Inject Child Comps if any
-    this.replacePlaceholderAll( this.dom );
+    this.replaceCompPlaceholderAll( this.dom );
 
     return true;
   }
@@ -203,19 +215,6 @@ export class Component {
     debugger;
   }
 
-  replacePlaceholderAll () {
-    // Get a list of all Placeholder Child Component
-    var nodeListPlaceholder = this.dom.querySelectorAll('.comp-placeholder');
-
-    // Iterate over all Placeholder Child Comps and replace them with Comp DOM
-    for (var indexNodeListPlaceholder = 0; indexNodeListPlaceholder < nodeListPlaceholder.length; indexNodeListPlaceholder++) {
-      var dPlaceholder = nodeListPlaceholder[ indexNodeListPlaceholder ];
-      var compChild = this.listObjCompChild[indexNodeListPlaceholder];
-      compChild.dom = dPlaceholder.insertAdjacentElement('beforebegin', compChild.dom);
-      dPlaceholder.parentNode.removeChild(dPlaceholder);
-    }
-  };
-
   doBind () {
     // ui-click | Do click handler bindings automatically right after rendering
     // Note: Binding happens before Child Comps are injected so Encapsulation is unharmed
@@ -223,15 +222,41 @@ export class Component {
     for (let indexListNodeBtn = 0; indexListNodeBtn < listNodeBtn.length; indexListNodeBtn++) {
       const nodeBtn = listNodeBtn[ indexListNodeBtn ];
 
-      const handler = nodeBtn.getAttribute('ui-click');
-      if (typeof this[handler] === 'undefined') {
-        console.warn(`UI: click handler called "${handler}" can't be found on the Component.`);
+      const nameHandler = nodeBtn.getAttribute('ui-click');
+      if (typeof this[nameHandler] === 'undefined') {
+        console.warn(`Game GUI: click handler called "${nameHandler}" can't be found on the Component (type === '${this.type}', id: ${this.id}).`);
         continue;
       }
 
-      nodeBtn.addEventListener('click', this[handler].bind(this), false);
+      nodeBtn.addEventListener('click', this[nameHandler].bind(this), false);
     }
   }
+
+  replaceCompPlaceholderAll () {
+    // Get a list of all Placeholder Child Component
+    var nodeListPlaceholder = this.dom.querySelectorAll('.comp-placeholder');
+
+    // Iterate over all Placeholder Child Comps and replace them with Comp DOM
+    for (let indexNodeListPlaceholder = 0; indexNodeListPlaceholder < nodeListPlaceholder.length; indexNodeListPlaceholder++) {
+      let dPlaceholder = nodeListPlaceholder[ indexNodeListPlaceholder ];
+
+      const typeComp          = dPlaceholder.getAttribute('type');
+      const idCompFromConfig  = dPlaceholder.getAttribute('id-from-config');
+      const ctrChild          = dPlaceholder.getAttribute('ctr-child');
+
+      const idCompChild = !!idCompFromConfig ? idCompFromConfig : ctrChild;
+      const compChild   = this.listObjCompChildByType[ typeComp ][ idCompChild ];
+
+      if (!compChild) {
+        const message  = `Warning: Component can't be found: typeComp==="${typeComp}", idCompFromConfig==="${idCompFromConfig}", ctrChild==="${ctrChild}". State of Cached Comps: `;
+        console.warn(message, JSON.stringify(this.listObjCompChildByType));
+        continue;
+      }
+
+      compChild.dom = dPlaceholder.insertAdjacentElement('beforebegin', compChild.dom);
+      dPlaceholder.parentNode.removeChild(dPlaceholder);
+    }
+  };
 
   getState () {
     return this.state;

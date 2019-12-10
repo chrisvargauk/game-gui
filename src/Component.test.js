@@ -95,15 +95,15 @@ describe('Component', () => {
   });
 
   describe('createDomRepresentation', () => {
-    const componentTest = new ComponentTest();
-    const domElement = componentTest.createDomRepresentation( 'fooBar', 'bar' );
+    const componentTest = new ComponentTest(undefined, {id: 'bar'});
+    const domElement = componentTest.createDomRepresentation();
 
     it('Should return an HTML Element', () => {
       expect( domElement instanceof HTMLElement ).toBe( true );
     });
 
     it('Should set the Comps type as Snake Cased class name on returned HTML Element.', () => {
-      expect( domElement.classList.contains('foo-bar') ).toBe( true );
+      expect( domElement.classList.contains('component-test') ).toBe( true );
     });
 
     it('Should set the Comps ID as "id" attribute on returned HTML Element.', () => {
@@ -126,11 +126,11 @@ describe('Component', () => {
 
         mockGameGui.regRootComp(CompParent, '#fake-root');
         const compParent = mockGameGui.rootComp;
-        expect( Object.keys(compParent.listObjCompChild).length ).toBe( 0 );
+        expect( Object.keys(compParent.listObjCompChildByType).length ).toBe( 0 );
 
         mockGameGui.render();
 
-        expect( compParent.listObjCompChild[0].type ).toBe( CompChild.prototype.constructor.name );
+        expect( compParent.listObjCompChildByType[CompChild.prototype.constructor.name] !== 'undefined' ).toBe( true );
       });
 
       it('Should NOT create new instance of Comp passed in if it has already been created before.', () => {
@@ -139,17 +139,16 @@ describe('Component', () => {
 
         mockGameGui.regRootComp(CompParent, '#fake-root');
         const compParent = mockGameGui.rootComp;
-        expect( Object.keys(compParent.listObjCompChild).length ).toBe( 0 );
+        expect( typeof compParent.listObjCompChildByType[CompChild.prototype.constructor.name] === 'undefined' ).toBe( true );
 
         // Render Child Comp the very first time and check whether there is only one created
         mockGameGui.render();
-        expect( Object.keys(compParent.listObjCompChild).length ).toBe( 1 );
-        expect( compParent.listObjCompChild[0].type ).toBe( CompChild.prototype.constructor.name );
+        expect( Object.keys(compParent.listObjCompChildByType[CompChild.prototype.constructor.name]).length ).toBe( 1 );
 
-        // Schedule Child Comp rendering the second time then check whether there is another instance creted
-        compParent.scheduleRendering( compParent.listObjCompChild[0] );
+        // Schedule Child Comp rendering the second time then check whether there is another instance created
+        compParent.scheduleRendering( compParent.listObjCompChildByType[CompChild.prototype.constructor.name]['id-child-comp'] );
         mockGameGui.render();
-        expect( Object.keys(compParent.listObjCompChild).length ).toBe( 1 );
+        expect( Object.keys(compParent.listObjCompChildByType[CompChild.prototype.constructor.name]).length ).toBe( 1 );
       });
 
       it('Should inject html representation of the rendered Comp passed in', () => {
@@ -295,6 +294,45 @@ describe('Component', () => {
           expect( comp.render ).toHaveBeenCalledTimes( 1 );
         });
       });
+
+      it('Shouldn\'t update the DOM if rendered HTML is the same as the HTML on record (prev render)', () => {
+        const comp = new Component();
+        comp.html = 'foo';
+        comp.render = () => ('foo');
+        comp.dom.innerHTML = 'original';
+        comp.isRenderBecauseDataPassedInChanged = () => true;
+        comp.isStateUpdated                     =       true;
+
+        comp.renderToHtmlAndDomify();
+
+        expect( comp.dom.innerHTML ).toBe('original');
+      });
+
+      it('Should update the HTML On Record and Comps DOM if the newly rendered HTML is different from the on on record.', () => {
+        const comp = new Component();
+        comp.html = 'foo';
+        comp.render = () => ('bar');
+        comp.dom.innerHTML = 'original';
+        comp.isRenderBecauseDataPassedInChanged = () => true;
+        comp.isStateUpdated                     =       true;
+
+        comp.renderToHtmlAndDomify();
+
+        expect( comp.html ).toBe('bar');
+        expect( comp.dom.innerHTML ).toBe('bar');
+      });
+    });
+
+    describe('Should run "afterRender" Life Cycle Methods if defined on Comp Instance', () => {
+      const comp = new Component();
+      comp.html = 'foo';
+      comp.render = () => ('bar');
+      comp.afterRender = jest.fn();
+      comp.isRenderBecauseDataPassedInChanged = () => true;
+
+      comp.renderToHtmlAndDomify();
+
+      expect( comp.afterRender ).toHaveBeenCalled();
     });
   });
 
@@ -381,6 +419,551 @@ describe('Component', () => {
 
         it('Should update record of Data Passed In From Parent Comp', () => {
           expect( comp.dataFromParentAsStringPrev ).toBe( JSON.stringify(dataFromParent) );
+        });
+      });
+    });
+  });
+
+  describe('doBind', () => {
+    describe('Click Evt Handler', () => {
+      it('Should link up handler method, defined by "click" attribute as string. e.g. <div ui-click="myClickHandler">...</div>', () => {
+        class ClickTestComp extends Component {
+          render() {
+            return `<div ui-click="handlerClick">click me</div>`;
+          }
+        }
+
+        const clickTestComp = new ClickTestComp();
+        clickTestComp.handlerClick = jest.fn();
+        clickTestComp.renderToHtmlAndDomify();
+
+        const event = new Event("click");
+        clickTestComp.dom.querySelector('div[ui-click]').dispatchEvent( event );
+
+        expect( clickTestComp.handlerClick ).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    it('Should give a warning if handler method defined by ui-click attribute is not defined on the Comp.', () => {
+      class ClickTestComp extends Component {
+        render() {
+          return `<div ui-click="handlerClick">click me</div>`;
+        }
+      }
+      console.warn = jest.fn();
+
+      const clickTestComp = new ClickTestComp();
+      clickTestComp.handlerClick = undefined; // no need to defined undefined, just being explicit for readability sake
+      clickTestComp.renderToHtmlAndDomify();
+
+      const event = new Event("click");
+      clickTestComp.dom.querySelector('div[ui-click]').dispatchEvent( event );
+
+      expect( console.warn ).toHaveBeenCalledWith(`Game GUI: click handler called "handlerClick" can't be found on the Component (type === '${clickTestComp.type}', id: ${clickTestComp.id}).`);
+    });
+  });
+
+  describe('replaceCompPlaceholderAll', () => {
+    it('Should replace Comp Placeholder HTML Element with related Comp DOM.', () => {
+      // Note: we already have integration test, so this test is more specific to implementation
+      const compParent = new Component();
+      compParent.html = 'foo';
+
+      const compChildA = new Component();
+      compChildA.html = 'child-comp-A-content-html';
+      compChildA.dom.innerHTML = 'child-comp-A-content';
+
+      const compChildB = new Component();
+      compChildB.html = 'child-comp-B-content-html';
+      compChildB.dom.innerHTML = 'child-comp-B-content';
+
+
+      compParent.listObjCompChildByType = {
+        Component: {
+          '0': compChildA,
+          '1': compChildB
+        }
+      };
+      const placeholderChildCompA = `<div class="comp-placeholder" type="${compChildA.type}" ctr-child="0">placeholder text</div>`;
+      const placeholderChildCompB = `<div class="comp-placeholder" type="${compChildB.type}" ctr-child="0">placeholder text</div>`;
+      compParent.render = () => (`...${placeholderChildCompA}...`);
+      compParent.dom.innerHTML = 'original';
+      compParent.isRenderBecauseDataPassedInChanged = () => true;
+
+      compParent.renderToHtmlAndDomify();
+
+      const compChildADOM = `<div class="component" id="${compChildA.id}">${compChildA.dom.innerHTML}</div>`;
+      expect( compParent.dom.innerHTML ).toBe(`...${compChildADOM}...`);
+    });
+
+    describe('Should replace Comp Placeholder HTML Element with related Comp DOM even, if the Parent/Wrapper Comp logic renders different Place Holder HTML Elements based on external factors.', () => {
+      describe('Render Parent Comp two times in a row, with different subset of cached Child Comps', () => {
+        describe('Use ctrChild, not ID from Config passed in to Child Comp at Include', () => {
+          // Note: we already have integration test, so this test is more specific to implementation
+          class SomeType extends  Component {}
+
+          const compParent = new SomeType();
+          compParent.html = 'foo';
+
+          const compChildA = new SomeType();
+          compChildA.html = 'child-comp-A-content-html';
+          compChildA.dom.innerHTML = 'child-comp-A-content';
+
+          const compChildB = new SomeType();
+          compChildB.html = 'child-comp-B-content-html';
+          compChildB.dom.innerHTML = 'child-comp-B-content';
+
+          const compChildC = new SomeType();
+          compChildC.html = 'child-comp-C-content-html';
+          compChildC.dom.innerHTML = 'child-comp-C-content';
+
+
+          compParent.listObjCompChildByType = {
+            SomeType: {
+              '0': compChildA,
+              '1': compChildB,
+              '2': compChildC,
+            }
+          };
+          const placeholderChildCompA = `<div class="comp-placeholder" type="${compChildA.type}" ctr-child="0">placeholder text</div>`;
+          const placeholderChildCompB = `<div class="comp-placeholder" type="${compChildB.type}" ctr-child="1">placeholder text</div>`;
+          const placeholderChildCompC = `<div class="comp-placeholder" type="${compChildC.type}" ctr-child="2">placeholder text</div>`;
+
+          const pickRenderCase = ( renderCase ) => {
+            if( renderCase === 'AB' ) {
+              return `${placeholderChildCompA}-${placeholderChildCompB}`;
+
+            } else if( renderCase === 'AC' ) {
+              return `${placeholderChildCompA}-${placeholderChildCompC}`;
+
+            }
+          };
+
+          it('Render Child Comp A then Child Comp B cached version.', () => {
+            compParent.render = () => (`...${pickRenderCase('AB')}...`);
+            compParent.dom.innerHTML = 'original';
+            compParent.isRenderBecauseDataPassedInChanged = () => true;
+
+            compParent.renderToHtmlAndDomify();
+
+            let compChildBoth  = `<div class="${compChildA.classNameInHtml}" id="${compChildA.id}">${compChildA.dom.innerHTML}</div>`;
+                compChildBoth += `-`;
+                compChildBoth += `<div class="${compChildB.classNameInHtml}" id="${compChildB.id}">${compChildB.dom.innerHTML}</div>`;
+            expect( compParent.dom.innerHTML ).toBe(`...${compChildBoth}...`);
+          });
+
+          it('Render Child Comp A then Child Comp C cached version', () => {
+            compParent.render = () => (`...${pickRenderCase('AC')}...`);
+            compParent.dom.innerHTML = 'original';
+            compParent.isRenderBecauseDataPassedInChanged = () => true;
+
+            compParent.renderToHtmlAndDomify();
+
+            let compChildBoth  = `<div class="${compChildA.classNameInHtml}" id="${compChildA.id}">${compChildA.dom.innerHTML}</div>`;
+                compChildBoth += `-`;
+                compChildBoth += `<div class="${compChildC.classNameInHtml}" id="${compChildC.id}">${compChildC.dom.innerHTML}</div>`;
+            expect( compParent.dom.innerHTML ).toBe(`...${compChildBoth}...`);
+          });
+        });
+
+        describe('Use ID from Config passed in to Child Comp at Include, not ctrChild', () => {
+          // Note: we already have integration test, so this test is more specific to implementation
+          class SomeType extends  Component {}
+
+          const compParent = new SomeType();
+          compParent.html = 'foo';
+
+          const compChildA = new SomeType();
+          compChildA.html = 'child-comp-A-content-html';
+          compChildA.dom.innerHTML = 'child-comp-A-content';
+
+          const compChildB = new SomeType();
+          compChildB.html = 'child-comp-B-content-html';
+          compChildB.dom.innerHTML = 'child-comp-B-content';
+
+          const compChildC = new SomeType();
+          compChildC.html = 'child-comp-C-content-html';
+          compChildC.dom.innerHTML = 'child-comp-C-content';
+
+
+          compParent.listObjCompChildByType = {
+            SomeType: {
+              'id-a': compChildA,
+              'id-b': compChildB,
+              'id-c': compChildC,
+            }
+          };
+          const placeholderChildCompA = `<div class="comp-placeholder" type="${compChildA.type}" ctr-child="0" id-from-config="id-a">placeholder text</div>`;
+          const placeholderChildCompB = `<div class="comp-placeholder" type="${compChildB.type}" ctr-child="1" id-from-config="id-b">placeholder text</div>`;
+          const placeholderChildCompC = `<div class="comp-placeholder" type="${compChildC.type}" ctr-child="2" id-from-config="id-c">placeholder text</div>`;
+
+          const pickRenderCase = ( renderCase ) => {
+            if( renderCase === 'AB' ) {
+              return `${placeholderChildCompA}-${placeholderChildCompB}`;
+
+            } else if( renderCase === 'AC' ) {
+              return `${placeholderChildCompA}-${placeholderChildCompC}`;
+
+            }
+          };
+
+          it('Render Child Comp A then Child Comp B cached version.', () => {
+            compParent.render = () => (`...${pickRenderCase('AB')}...`);
+            compParent.dom.innerHTML = 'original';
+            compParent.isRenderBecauseDataPassedInChanged = () => true;
+
+            compParent.renderToHtmlAndDomify();
+
+            let compChildBoth  = `<div class="${compChildA.classNameInHtml}" id="${compChildA.id}">${compChildA.dom.innerHTML}</div>`;
+                compChildBoth += `-`;
+                compChildBoth += `<div class="${compChildB.classNameInHtml}" id="${compChildB.id}">${compChildB.dom.innerHTML}</div>`;
+            expect( compParent.dom.innerHTML ).toBe(`...${compChildBoth}...`);
+          });
+
+          it('Render Child Comp A then Child Comp C cached version', () => {
+            compParent.render = () => (`...${pickRenderCase('AC')}...`);
+            compParent.dom.innerHTML = 'original';
+            compParent.isRenderBecauseDataPassedInChanged = () => true;
+
+            compParent.renderToHtmlAndDomify();
+
+            let compChildBoth  = `<div class="${compChildA.classNameInHtml}" id="${compChildA.id}">${compChildA.dom.innerHTML}</div>`;
+                compChildBoth += `-`;
+                compChildBoth += `<div class="${compChildC.classNameInHtml}" id="${compChildC.id}">${compChildC.dom.innerHTML}</div>`;
+            expect( compParent.dom.innerHTML ).toBe(`...${compChildBoth}...`);
+          });
+        });
+
+        describe('Use a mixture of ID from Config passed in to Child Comp at Include, and ctrChild', () => {
+          // Note: we already have integration test, so this test is more specific to implementation
+          class SomeType extends  Component {}
+
+          const compParent = new SomeType();
+          compParent.html = 'foo';
+
+          const compChildA = new SomeType();
+          compChildA.html = 'child-comp-A-content-html';
+          compChildA.dom.innerHTML = 'child-comp-A-content';
+
+          const compChildB = new SomeType();
+          compChildB.html = 'child-comp-B-content-html';
+          compChildB.dom.innerHTML = 'child-comp-B-content';
+
+          const compChildC = new SomeType();
+          compChildC.html = 'child-comp-C-content-html';
+          compChildC.dom.innerHTML = 'child-comp-C-content';
+
+
+          compParent.listObjCompChildByType = {
+            SomeType: {
+              'id-a': compChildA,
+              '1':    compChildB,
+              'id-c': compChildC,
+            }
+          };
+          const placeholderChildCompA = `<div class="comp-placeholder" type="${compChildA.type}" ctr-child="0" id-from-config="id-a">placeholder text</div>`;
+          const placeholderChildCompB = `<div class="comp-placeholder" type="${compChildB.type}" ctr-child="1"                      >placeholder text</div>`;
+          const placeholderChildCompC = `<div class="comp-placeholder" type="${compChildC.type}" ctr-child="2" id-from-config="id-c">placeholder text</div>`;
+
+          const pickRenderCase = ( renderCase ) => {
+            if( renderCase === 'AB' ) {
+              return `${placeholderChildCompA}-${placeholderChildCompB}`;
+
+            } else if( renderCase === 'AC' ) {
+              return `${placeholderChildCompA}-${placeholderChildCompC}`;
+
+            }
+          };
+
+          it('Render Child Comp A then Child Comp B cached version.', () => {
+            compParent.render = () => (`...${pickRenderCase('AB')}...`);
+            compParent.dom.innerHTML = 'original';
+            compParent.isRenderBecauseDataPassedInChanged = () => true;
+
+            compParent.renderToHtmlAndDomify();
+
+            let compChildBoth  = `<div class="${compChildA.classNameInHtml}" id="${compChildA.id}">${compChildA.dom.innerHTML}</div>`;
+                compChildBoth += `-`;
+                compChildBoth += `<div class="${compChildB.classNameInHtml}" id="${compChildB.id}">${compChildB.dom.innerHTML}</div>`;
+            expect( compParent.dom.innerHTML ).toBe(`...${compChildBoth}...`);
+          });
+
+          it('Render Child Comp A then Child Comp C cached version', () => {
+            compParent.render = () => (`...${pickRenderCase('AC')}...`);
+            compParent.dom.innerHTML = 'original';
+            compParent.isRenderBecauseDataPassedInChanged = () => true;
+
+            compParent.renderToHtmlAndDomify();
+
+            let compChildBoth  = `<div class="${compChildA.classNameInHtml}" id="${compChildA.id}">${compChildA.dom.innerHTML}</div>`;
+                compChildBoth += `-`;
+                compChildBoth += `<div class="${compChildC.classNameInHtml}" id="${compChildC.id}">${compChildC.dom.innerHTML}</div>`;
+            expect( compParent.dom.innerHTML ).toBe(`...${compChildBoth}...`);
+          });
+        });
+
+        it('Throw a waring if Component cant be found in cache when it should be, but doesnt stop rendering.', () => {
+          // Note: we already have integration test, so this test is more specific to implementation
+          class SomeType extends  Component {}
+
+          const compParent = new SomeType();
+          compParent.html = 'foo';
+
+          const compChildA = new SomeType();
+          compChildA.html = 'child-comp-A-content-html';
+          compChildA.dom.innerHTML = 'child-comp-A-content';
+
+          const compChildB = new SomeType();
+          compChildB.html = 'child-comp-B-content-html';
+          compChildB.dom.innerHTML = 'child-comp-B-content';
+
+
+          compParent.listObjCompChildByType = {
+            SomeType: {
+              'id-b': compChildB,
+            }
+          };
+
+          const placeholderChildCompA = `<div class="comp-placeholder" type="${compChildA.type}" ctr-child="0" id-from-config="id-a">placeholder text</div>`;
+          const placeholderChildCompB = `<div class="comp-placeholder" type="${compChildB.type}" ctr-child="1" id-from-config="id-b">placeholder text</div>`;
+
+          const pickRenderCase = ( renderCase ) => {
+            if( renderCase === 'AB' ) {
+              return `${placeholderChildCompA}-${placeholderChildCompB}`;
+
+            } else if( renderCase === 'AC' ) {
+              return `${placeholderChildCompA}-${placeholderChildCompC}`;
+
+            }
+          };
+
+          compParent.render = () => (`...${pickRenderCase('AB')}...`);
+          compParent.dom.innerHTML = 'original';
+          compParent.isRenderBecauseDataPassedInChanged = () => true;
+
+          console.warn = jest.fn();
+
+          compParent.renderToHtmlAndDomify();
+
+          let compChildBoth  = `<div class="comp-placeholder" type="${compChildA.type}" ctr-child="0" id-from-config="id-a">placeholder text</div>`;
+              compChildBoth += `-`;
+              compChildBoth += `<div class="${compChildB.classNameInHtml}" id="${compChildB.id}">${compChildB.dom.innerHTML}</div>`;
+          expect( compParent.dom.innerHTML ).toBe(`...${compChildBoth}...`);
+          expect(console.warn).toHaveBeenCalled();
+        });
+
+        describe('Should render Cached Comps with different types.', () => {
+          // Note: we already have integration test, so this test is more specific to implementation
+          class SomeTypeX extends  Component {}
+          class SomeTypeY extends  Component {}
+
+          const compParent = new SomeTypeX();
+          compParent.html = 'foo';
+
+          const compChildA = new SomeTypeX();
+          compChildA.html = 'child-comp-A-content-html';
+          compChildA.dom.innerHTML = 'child-comp-A-content';
+
+          const compChildB = new SomeTypeX();
+          compChildB.html = 'child-comp-B-content-html';
+          compChildB.dom.innerHTML = 'child-comp-B-content';
+
+          const compChildC = new SomeTypeY();
+          compChildC.html = 'child-comp-C-content-html';
+          compChildC.dom.innerHTML = 'child-comp-C-content';
+
+
+          compParent.listObjCompChildByType = {
+            SomeTypeX: {
+              'id-a': compChildA,
+              'id-b': compChildB,
+            },
+            SomeTypeY: {
+              'id-c': compChildC,
+            }
+          };
+
+          const placeholderChildCompA = `<div class="comp-placeholder" type="${compChildA.type}" ctr-child="0" id-from-config="id-a">placeholder text</div>`;
+          const placeholderChildCompB = `<div class="comp-placeholder" type="${compChildB.type}" ctr-child="1" id-from-config="id-b">placeholder text</div>`;
+          const placeholderChildCompC = `<div class="comp-placeholder" type="${compChildC.type}" ctr-child="2" id-from-config="id-c">placeholder text</div>`;
+
+          const pickRenderCase = ( renderCase ) => {
+            if( renderCase === 'AB' ) {
+              return `${placeholderChildCompA}-${placeholderChildCompB}`;
+
+            } else if( renderCase === 'AC' ) {
+              return `${placeholderChildCompA}-${placeholderChildCompC}`;
+
+            }
+          };
+
+          it('Render Child Comp A then Child Comp B cached version.', () => {
+            compParent.render = () => (`...${pickRenderCase('AB')}...`);
+            compParent.dom.innerHTML = 'original';
+            compParent.isRenderBecauseDataPassedInChanged = () => true;
+
+            compParent.renderToHtmlAndDomify();
+
+            let compChildBoth  = `<div class="${compChildA.classNameInHtml}" id="${compChildA.id}">${compChildA.dom.innerHTML}</div>`;
+                compChildBoth += `-`;
+                compChildBoth += `<div class="${compChildB.classNameInHtml}" id="${compChildB.id}">${compChildB.dom.innerHTML}</div>`;
+            expect( compParent.dom.innerHTML ).toBe(`...${compChildBoth}...`);
+          });
+
+          it('Render Child Comp A then Child Comp C cached version', () => {
+            compParent.render = () => (`...${pickRenderCase('AC')}...`);
+            compParent.dom.innerHTML = 'original';
+            compParent.isRenderBecauseDataPassedInChanged = () => true;
+
+            compParent.renderToHtmlAndDomify();
+
+            let compChildBoth  = `<div class="${compChildA.classNameInHtml}" id="${compChildA.id}">${compChildA.dom.innerHTML}</div>`;
+                compChildBoth += `-`;
+                compChildBoth += `<div class="${compChildC.classNameInHtml}" id="${compChildC.id}">${compChildC.dom.innerHTML}</div>`;
+            expect( compParent.dom.innerHTML ).toBe(`...${compChildBoth}...`);
+          });
+        });
+
+        describe('Should render Cached Comps with different types. With a mixture of ID from Config passed in to Child Comp at Include, and ctrChild.', () => {
+          // Note: we already have integration test, so this test is more specific to implementation
+          class SomeTypeX extends  Component {}
+          class SomeTypeY extends  Component {}
+
+          const compParent = new SomeTypeX();
+          compParent.html = 'foo';
+
+          const compChildA = new SomeTypeX();
+          compChildA.html = 'child-comp-A-content-html';
+          compChildA.dom.innerHTML = 'child-comp-A-content';
+
+          const compChildB = new SomeTypeX();
+          compChildB.html = 'child-comp-B-content-html';
+          compChildB.dom.innerHTML = 'child-comp-B-content';
+
+          const compChildC = new SomeTypeY();
+          compChildC.html = 'child-comp-C-content-html';
+          compChildC.dom.innerHTML = 'child-comp-C-content';
+
+
+          compParent.listObjCompChildByType = {
+            SomeTypeX: {
+              'id-a': compChildA,
+              'id-b': compChildB,
+            },
+            SomeTypeY: {
+              '2': compChildC,
+            }
+          };
+          const placeholderChildCompA = `<div class="comp-placeholder" type="${compChildA.type}" ctr-child="0" id-from-config="id-a">placeholder text</div>`;
+          const placeholderChildCompB = `<div class="comp-placeholder" type="${compChildB.type}" ctr-child="1" id-from-config="id-b">placeholder text</div>`;
+          const placeholderChildCompC = `<div class="comp-placeholder" type="${compChildC.type}" ctr-child="2"                      >placeholder text</div>`;
+
+          const pickRenderCase = ( renderCase ) => {
+            if( renderCase === 'AB' ) {
+              return `${placeholderChildCompA}-${placeholderChildCompB}`;
+
+            } else if( renderCase === 'AC' ) {
+              return `${placeholderChildCompA}-${placeholderChildCompC}`;
+
+            }
+          };
+
+          it('Render Child Comp A then Child Comp B cached version.', () => {
+            compParent.render = () => (`...${pickRenderCase('AB')}...`);
+            compParent.dom.innerHTML = 'original';
+            compParent.isRenderBecauseDataPassedInChanged = () => true;
+
+            compParent.renderToHtmlAndDomify();
+
+            let compChildBoth  = `<div class="${compChildA.classNameInHtml}" id="${compChildA.id}">${compChildA.dom.innerHTML}</div>`;
+            compChildBoth += `-`;
+            compChildBoth += `<div class="${compChildB.classNameInHtml}" id="${compChildB.id}">${compChildB.dom.innerHTML}</div>`;
+            expect( compParent.dom.innerHTML ).toBe(`...${compChildBoth}...`);
+          });
+
+          it('Render Child Comp A then Child Comp C cached version', () => {
+            compParent.render = () => (`...${pickRenderCase('AC')}...`);
+            compParent.dom.innerHTML = 'original';
+            compParent.isRenderBecauseDataPassedInChanged = () => true;
+
+            compParent.renderToHtmlAndDomify();
+
+            let compChildBoth  = `<div class="${compChildA.classNameInHtml}" id="${compChildA.id}">${compChildA.dom.innerHTML}</div>`;
+            compChildBoth += `-`;
+            compChildBoth += `<div class="${compChildC.classNameInHtml}" id="${compChildC.id}">${compChildC.dom.innerHTML}</div>`;
+            expect( compParent.dom.innerHTML ).toBe(`...${compChildBoth}...`);
+          });
+        });
+
+        describe('You are not forced to use IDs for all types of Comps, if you started using ID for some types.', () => {
+          // Note: we already have integration test, so this test is more specific to implementation
+          class SomeTypeX extends  Component {}
+          class SomeTypeY extends  Component {}
+
+          const compParent = new SomeTypeX();
+          compParent.html = 'foo';
+
+          const compChildA = new SomeTypeX();
+          compChildA.html = 'child-comp-A-content-html';
+          compChildA.dom.innerHTML = 'child-comp-A-content';
+
+          const compChildC_a = new SomeTypeY();
+          compChildC_a.html = 'child-comp-C-content-html';
+          compChildC_a.dom.innerHTML = 'child-comp-C-content';
+
+          const compChildC_b = new SomeTypeY();
+          compChildC_b.html = 'child-comp-C-content-html';
+          compChildC_b.dom.innerHTML = 'child-comp-C-content';
+
+
+          compParent.listObjCompChildByType = {
+            SomeTypeX: {
+              'id-a': compChildA,
+            },
+            SomeTypeY: {
+              '0': compChildC_a,
+              '1': compChildC_b,
+            }
+          };
+
+          const pickRenderCase = ( renderCase ) => {
+            if( renderCase === 'AC' ) {
+              const placeholderChildCompA = `<div class="comp-placeholder" type="${compChildA.type}" ctr-child="0" id-from-config="id-a">placeholder text</div>`;
+              const placeholderChildCompC = `<div class="comp-placeholder" type="${compChildC_a.type}" ctr-child="0"                      >placeholder text</div>`;
+
+              return `${placeholderChildCompA}-${placeholderChildCompC}`;
+
+            } else if( renderCase === 'C' ) {
+              const placeholderChildCompC = `<div class="comp-placeholder" type="${compChildC_b.type}" ctr-child="1"                      >placeholder text</div>`;
+
+              return `${placeholderChildCompC}`;
+
+            }
+          };
+
+          it('Render Child Comp A then Child Comp C cached version.', () => {
+            compParent.render = () => (`...${pickRenderCase('AC')}...`);
+            compParent.dom.innerHTML = 'original';
+            compParent.isRenderBecauseDataPassedInChanged = () => true;
+
+            compParent.renderToHtmlAndDomify();
+
+            let compChildBoth  = `<div class="${compChildA.classNameInHtml}" id="${compChildA.id}">${compChildA.dom.innerHTML}</div>`;
+                compChildBoth += `-`;
+                compChildBoth += `<div class="${compChildC_a.classNameInHtml}" id="${compChildC_a.id}">${compChildC_a.dom.innerHTML}</div>`;
+            expect( compParent.dom.innerHTML ).toBe(`...${compChildBoth}...`);
+          });
+
+          it('Render Child Comp C cached version without rendering Child Comp A first, proving that order of cached Comps doesnt matter as long as they have different type.', () => {
+            compParent.render = () => (`...${pickRenderCase('C')}...`);
+            compParent.dom.innerHTML = 'original';
+            compParent.isRenderBecauseDataPassedInChanged = () => true;
+
+            compParent.renderToHtmlAndDomify();
+
+            let compChildBoth  = `<div class="${compChildC_b.classNameInHtml}" id="${compChildC_b.id}">${compChildC_b.dom.innerHTML}</div>`;
+            expect( compParent.dom.innerHTML ).toBe(`...${compChildBoth}...`);
+          });
         });
       });
     });
