@@ -968,4 +968,45 @@ describe('Component', () => {
       });
     });
   });
+
+  describe('setState', () => {
+    const componentTest = new ComponentTest();
+    componentTest.scheduleRendering = jest.fn();
+
+    componentTest.setState({foo: 'bar'});
+
+    it('Should update the state of Comp accordingly', () =>{
+      expect( componentTest.state.foo ).toBe('bar');
+    });
+
+    it('Should schedlue the Comp to be rendered.', () =>{
+      expect( componentTest.isStateUpdated ).toBe( true );
+      expect( componentTest.scheduleRendering ).toHaveBeenCalledWith( componentTest );
+    });
+  });
+
+  describe('getState', () => {
+    const componentTest = new ComponentTest();
+    componentTest.setState({foo: 'bar'});
+
+    it('Should update the state of Comp accordingly', () =>{
+      expect( componentTest.getState().foo ).toBe('bar');
+    });
+  });
+
+  describe('uid', () => {
+    const componentTest = new ComponentTest();
+
+    it('Should produce a unique ID under any circumstance.', () =>{
+      expect( componentTest.uid() ).not.toBe( componentTest.uid() );
+    });
+  });
+
+  describe('camelCaseToSnakeCase', () => {
+    const componentTest = new ComponentTest();
+
+    it('Should produce a unique ID under any circumstance.', () =>{
+      expect( componentTest.camelCaseToSnakeCase('TestComp') ).toBe( 'test-comp' );
+    });
+  });
 });
