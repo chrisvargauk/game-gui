@@ -10,67 +10,80 @@
       font-family: monospace, verda;
       font-size: 13px;
     }
+
+    a {
+      color: #ff9f26;
+    }
+
+    a:visited {
+      color: #c86f25;
+    }
   </style>
 </head>
 <body>
 <div id="ui-root"></div>
 <script src="../dist/GameGUI.js"></script>
-<!--<script src="../src/GameGUIRouter.js"></script>-->
 <script>
-  // http://localhost:8000/demo/demo-11-router.html#notRunning?user=Jane&age=37&foo&bar
+  GameGUI.router.rout('running', function () {
+    console.log('"running" Rout fired for Subscriber using API, not Comp.');
+  });
 
-  const gameGUIRouter = new GameGUI.Router();
-
-  class CompExampleA extends GameGUI.Component {
+  class CompRunning extends GameGUI.Component {
     render (attrib) {
       return `
-        This is rout A </br>
-        Running is matched :) ${attrib.user} age: ${attrib.age}\`
+        This is rout "running" | ${attrib.user} age: ${attrib.age} </br>
       `;
     }
   }
 
-  class CompExampleC extends GameGUI.Component {
-    render (attrib) {
-      return `
-        This is rout C </br>
-        Running is matched :) ${attrib.user} age: ${attrib.age}\`
-      `;
-    }
-  }
-
-  const CompExampleB = function (attrib) {
+  const CompMainAccount = function (attrib) {
     return `
-      This is rout B</br>
-        Running is matched :) ${attrib.user} age: ${attrib.age}
+      This is rout "Main / Account"</br>
     `;
   };
 
-  class Rout extends GameGUI.Component {
-    afterInstantiation () {
-      gameGUIRouter.matchPath(this.config.path, () => {
-        this.setState({
-          timestampChange: Date.now(),
-        });
-      });
-    }
-
-    render() {
+  class CompSetting  extends GameGUI.Component {
+    render (attrib) {
       return `
-        ${gameGUIRouter.match(this.config.path, (attrib) => {
-        return `
-          ${this.include(this.config.comp, attrib)}
-        `;
-      })}
+        This is rout "Setting"<br>
+        ${this.include(GameGUI.Rout, 'main/setting/audio', CompSettingAudio)}
       `;
     }
   }
+
+  const CompSettingAudio = function (attrib) {
+    return `
+      This is rout "Setting / Audio"
+    `;
+  };
 
   class MyComp extends GameGUI.Component {
     render () {
       return `
-        <span>Hello World!</span><br>
-        ${this.include(Rout, {}, {path: 'running', comp: CompExampleA})}
+        <center><h2>Routing Examples</h2></center>
+        <hr>
+
+        <h3>Single Rout</h3>
+        <a href="#running?user=Jane&age=20&foo">#running?user=Jane&age=20&foo</a>
+
+        <h3>Multiple Routs</h3>
+        <a href="#@menu:main/account@game:running?user=Jane&age=20&foo">#@menu:main/account@game:running?user=Jane&age=20&foo</a>
+
+        <h3>No Matching Rout</h3>
+        <a href="#notRunning?user=Jane&age=37&foo&bar">#notRunning?user=Jane&age=37&foo&bar</a>
+
+        <h3>Multiple Matching Routs and/or SubRouts</h3>
+        <a href="#main/setting">main/setting</a> |
+        <a href="#main/setting/audio">main/setting/audio</a>
+
+        <h3>SubRouts matched only to the left (unlike a substring)</h3>
+        <a href="#main/setting">main/setting</a> |
+        <a href="#else/main/setting">else/main/setting</a>
+
+        <hr>
+        ${this.include(GameGUI.Rout, 'running',       CompRunning)}
+        ${this.include(GameGUI.Rout, 'main/account',  CompMainAccount)}
+        ${this.include(GameGUI.Rout, 'main/setting',  CompSetting)}
       `;
     }
   }

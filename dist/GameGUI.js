@@ -400,20 +400,29 @@ class Component {
 /*!************************!*\
   !*** ./src/GameGUI.js ***!
   \************************/
-/*! exports provided: GameGUI, default, Component, Router */
+/*! exports provided: GameGUI, router, default, Component, Router, Rout */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "GameGUI", function() { return GameGUI; });
-/* harmony import */ var _Component__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./Component */ "./src/Component.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Component", function() { return _Component__WEBPACK_IMPORTED_MODULE_0__["Component"]; });
+/* harmony import */ var _Router__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./Router */ "./src/Router.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "router", function() { return _Router__WEBPACK_IMPORTED_MODULE_0__["default"]; });
 
-/* harmony import */ var _GameGUIRouter__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./GameGUIRouter */ "./src/GameGUIRouter.js");
-/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Router", function() { return _GameGUIRouter__WEBPACK_IMPORTED_MODULE_1__["Router"]; });
+/* harmony import */ var _Component__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Component */ "./src/Component.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Component", function() { return _Component__WEBPACK_IMPORTED_MODULE_1__["Component"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Router", function() { return _Router__WEBPACK_IMPORTED_MODULE_0__["Router"]; });
+
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Rout", function() { return _Router__WEBPACK_IMPORTED_MODULE_0__["Rout"]; });
+
+/* harmony import */ var _Rout__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./Rout */ "./src/Rout.js");
+/* empty/unused harmony star reexport */
 
 class GameGUI {
   constructor(RootComp, selectorGuiRoot, option, configRootComp) {
+    this.router = _Router__WEBPACK_IMPORTED_MODULE_0__["default"];
+
     // Reg Root Comp automatically if requirements are fulfilled
     // Note: don't run it by default, you may want to control the steps.
     if (typeof RootComp === 'undefined' ||
@@ -572,29 +581,71 @@ class GameGUI {
 
 
 
+
+
 /* harmony default export */ __webpack_exports__["default"] = (GameGUI);
 
 /***/ }),
 
-/***/ "./src/GameGUIRouter.js":
-/*!******************************!*\
-  !*** ./src/GameGUIRouter.js ***!
-  \******************************/
-/*! exports provided: Router, default */
+/***/ "./src/Rout.js":
+/*!*********************!*\
+  !*** ./src/Rout.js ***!
+  \*********************/
+/*! exports provided: Rout */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Rout", function() { return Rout; });
+/* harmony import */ var _Component__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./Component */ "./src/Component.js");
+/* harmony import */ var _Router__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Router */ "./src/Router.js");
+
+
+
+class Rout extends _Component__WEBPACK_IMPORTED_MODULE_0__["default"] {
+  afterInstantiation ( path ) {
+    console.log('----- dataFromParent (afterInstantiation)', path);
+    _Router__WEBPACK_IMPORTED_MODULE_1__["default"].subToHashChange(path, pathListSub => {
+      this.setState({
+        idChange: this.uid(),
+      });
+    });
+  }
+
+  render( path ) {
+    console.log('----- dataFromParent (render)', path);
+
+    return _Router__WEBPACK_IMPORTED_MODULE_1__["default"].runIfPathMatch(path, (attrib) =>
+      this.include(this.config, attrib)
+    );
+  }
+}
+
+/***/ }),
+
+/***/ "./src/Router.js":
+/*!***********************!*\
+  !*** ./src/Router.js ***!
+  \***********************/
+/*! exports provided: Router, router, default, Rout */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Router", function() { return Router; });
-// http://localhost:8000/demo/demo-11-router.html#@menu:main/setting@game:running?user=Jane&age=20&foo
-// http://localhost:8000/demo/demo-11-router.html#running?user=Jane&age=20&foo
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "router", function() { return router; });
+/* harmony import */ var _Rout__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./Rout */ "./src/Rout.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Rout", function() { return _Rout__WEBPACK_IMPORTED_MODULE_0__["Rout"]; });
 
-// todo: rerender Comps at hash change
+// todo: make ID as optional specification for routs, otherweise they r useless ..maybe thats okay
+// todo: make sure you can have multiple routs matching the same path "this.listObjPathListSub[ pathToMatch ] = fn;"
 
 class Router {
   constructor() {
-    this.listRout = [];
-    this.listObjPathToMatch = {};
+    this.listRoutParsedCurrent  = [];
+    this.listSub                = [];
+    this.listObjPathListSub     = {}; // note: this is for debugging only
+
     window.addEventListener("hashchange", this.handlerHashChange.bind( this ), false);
     this.handlerHashChange();
   }
@@ -614,14 +665,13 @@ class Router {
   getListRout() {
     const hash = this.getHash();
 
-    // Skip if non-standard Rout is presented
+    // Single Rout in hash
     if (hash.indexOf('@') === -1 ) {
       return [hash];
+    } else {
+      return hash.split('@')
+                 .filter( rout => rout !== '');
     }
-
-    const listRout = hash.split('@').filter( rout => rout !== '');
-
-    return listRout;
   }
 
   processRout( rout ) {
@@ -660,42 +710,67 @@ class Router {
     return {
       id,
       listObjAttribute,
-      path: (id ? id+':' : '')+path,
+      path,
     }
   }
 
   handlerHashChange () {
-    const listRoutRaw = this.getListRout();
-    this.listRout = listRoutRaw.map(rout => this.processRout(rout));
-    this.fireMatchAll();
-    console.log('this.listRout:', this.listRout);
+    const listRoutStr = this.getListRout();
+    this.listRoutParsedCurrent = listRoutStr.map(rout => this.processRout(rout));
+    // ...
+    this.fireAllSub();
+    console.log('this.listRoutParsedCurrent:', this.listRoutParsedCurrent);
   }
 
-  match( pathToMatch, fn ) {
-    for ( let indexListRout=0; indexListRout<this.listRout.length; indexListRout++ ) {
-      const rout = this.listRout[ indexListRout ];
+  subToHashChange ( pathToMatch, fn ) {
+    this.listSub.push( fn );
+    this.subToPath ( pathToMatch, fn ); // note: this is for debugging only
+  }
 
-      if ( rout.path === pathToMatch ) {
-        return fn( rout.listObjAttribute );
+  subToPath ( pathToMatch, fn ) {
+    const listSub = this.listObjPathListSub[ pathToMatch ] = this.listObjPathListSub[ pathToMatch ] || [];
+    listSub.push( fn );
+  }
+
+  runIfPathMatch ( pathToMatch, fn ) {
+    for ( let indexListRout=0; indexListRout<this.listRoutParsedCurrent.length; indexListRout++ ) {
+      const routParsedCurrent = this.listRoutParsedCurrent[ indexListRout ];
+
+      if ( routParsedCurrent.path.indexOf(pathToMatch) === 0 ) {
+        return fn( routParsedCurrent.listObjAttribute );
       }
     }
 
     return '';
   }
 
-  matchPath( pathToMatch, fn ) {
-    this.listObjPathToMatch[ pathToMatch ] = fn;
-  }
-
-  fireMatchAll() {
-    for (let pathToMatch in this.listObjPathToMatch) {
-      const fn = this.listObjPathToMatch[ pathToMatch ];
-      fn();
+  fireAllSub () {
+    for (let indexListSub = 0; indexListSub < this.listSub.length; indexListSub++) {
+      const sub = this.listSub[ indexListSub ];
+      sub();
     }
   }
+
+  rout ( pathToMatch, fnToCallIfMatch ) {
+    this.subToHashChange( pathToMatch, () => {
+      this.runIfPathMatch( pathToMatch, fnToCallIfMatch );
+    });
+  }
+
+  // fireAllSubOld() {
+  //   for (let pathListSub in this.listObjPathListSub) {
+  //     const listSub = this.listObjPathListSub[ pathListSub ];
+  //     for (let indexListSub = 0; indexListSub < listSub.length; indexListSub++) {
+  //       const sub = listSub[ indexListSub ];
+  //       sub( pathListSub );
+  //     }
+  //   }
+  // }
 }
 
-/* harmony default export */ __webpack_exports__["default"] = (Router);
+
+const router = new Router();
+/* harmony default export */ __webpack_exports__["default"] = (router);
 
 /***/ })
 

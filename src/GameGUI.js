@@ -1,5 +1,9 @@
+import router from './Router';
+
 export class GameGUI {
   constructor(RootComp, selectorGuiRoot, option, configRootComp) {
+    this.router = router;
+
     // Reg Root Comp automatically if requirements are fulfilled
     // Note: don't run it by default, you may want to control the steps.
     if (typeof RootComp === 'undefined' ||
@@ -157,5 +161,7 @@ export class GameGUI {
 }
 
 export * from './Component';
-export * from './GameGUIRouter';
+export * from './Router';
+export * from './Rout';
+export { router };
 export default GameGUI;
