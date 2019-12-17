@@ -604,20 +604,21 @@ __webpack_require__.r(__webpack_exports__);
 
 class Rout extends _Component__WEBPACK_IMPORTED_MODULE_0__["default"] {
   afterInstantiation ( path ) {
-    console.log('----- dataFromParent (afterInstantiation)', path);
-    _Router__WEBPACK_IMPORTED_MODULE_1__["default"].subToHashChange(path, pathListSub => {
+    _Router__WEBPACK_IMPORTED_MODULE_1__["default"].subToHashChange( path, pathListSub => {
       this.setState({
         idChange: this.uid(),
       });
     });
+
+    this.includeComp = this.includeComp.bind( this );
+  }
+
+  includeComp( attrib ) {
+    return this.include(this.config, attrib);
   }
 
   render( path ) {
-    console.log('----- dataFromParent (render)', path);
-
-    return _Router__WEBPACK_IMPORTED_MODULE_1__["default"].runIfPathMatch(path, (attrib) =>
-      this.include(this.config, attrib)
-    );
+    return _Router__WEBPACK_IMPORTED_MODULE_1__["default"].runIfPathMatch( path, this.includeComp );
   }
 }
 
@@ -627,7 +628,7 @@ class Rout extends _Component__WEBPACK_IMPORTED_MODULE_0__["default"] {
 /*!***********************!*\
   !*** ./src/Router.js ***!
   \***********************/
-/*! exports provided: Router, router, default, Rout */
+/*! exports provided: Router, Rout, router, default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -638,7 +639,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Rout", function() { return _Rout__WEBPACK_IMPORTED_MODULE_0__["Rout"]; });
 
 // todo: make ID as optional specification for routs, otherweise they r useless ..maybe thats okay
-// todo: make sure you can have multiple routs matching the same path "this.listObjPathListSub[ pathToMatch ] = fn;"
+// todo: Make native API work when page fired up the first time, not only at updates
 
 class Router {
   constructor() {
@@ -717,31 +718,76 @@ class Router {
   handlerHashChange () {
     const listRoutStr = this.getListRout();
     this.listRoutParsedCurrent = listRoutStr.map(rout => this.processRout(rout));
-    // ...
+
     this.fireAllSub();
     console.log('this.listRoutParsedCurrent:', this.listRoutParsedCurrent);
   }
 
-  subToHashChange ( pathToMatch, fn ) {
-    this.listSub.push( fn );
-    this.subToPath ( pathToMatch, fn ); // note: this is for debugging only
+  subToHashChange ( pathToMatch, fnToCallIfMatch, fnToCallIfDoesntMatch ) {
+    this.listSub.push( fnToCallIfMatch );
+    this.subToPath ( pathToMatch, fnToCallIfMatch, fnToCallIfDoesntMatch ); // note: this is for debugging only
+    this.handlerHashChange();
   }
 
-  subToPath ( pathToMatch, fn ) {
+  subToPath ( pathToMatch, fnToCallIfMatch, fnToCallIfDoesntMatch ) {
     const listSub = this.listObjPathListSub[ pathToMatch ] = this.listObjPathListSub[ pathToMatch ] || [];
-    listSub.push( fn );
+    listSub.push( {pathToMatch, fnToCallIfMatch, fnToCallIfDoesntMatch} );
   }
 
-  runIfPathMatch ( pathToMatch, fn ) {
+  runIfPathMatch ( pathToMatch, fnToCallIfMatch, fnToCallIfDoesntMatch, singleActivation ) {
+    let routParsedCurrentMatching;
+
+    // Search
+    // Iterate List of Current Routs/Paths
     for ( let indexListRout=0; indexListRout<this.listRoutParsedCurrent.length; indexListRout++ ) {
       const routParsedCurrent = this.listRoutParsedCurrent[ indexListRout ];
 
+      // If Current Routs/Paths Iter matching Path that we are searching for
+      // Note: Match it only to the left, e.g.: main/setting & main/setting/audio
       if ( routParsedCurrent.path.indexOf(pathToMatch) === 0 ) {
-        return fn( routParsedCurrent.listObjAttribute );
+        routParsedCurrentMatching = routParsedCurrent;
+
+        // // If Path was inactive up to now
+        // if ( !fnToCallIfMatch.isActive ) {
+        //   fnToCallIfMatch.isActive = true;
+        // }
       }
     }
 
-    return '';
+    // Matching
+    // If there is a matching Subscriber/Rout
+    if ( routParsedCurrentMatching ) {
+      // If "fnToCallIfMatch" should be called once in subsequent matching Paths
+      if ( singleActivation ) {
+        // If Path was inactive up to now
+        if ( !fnToCallIfMatch.isActive ) {
+          fnToCallIfMatch.isActive = true;
+          return fnToCallIfMatch( routParsedCurrentMatching.listObjAttribute );
+
+        // If Path was inactivated by prev path
+        } else {
+          return '';
+        }
+
+      } else {
+        return fnToCallIfMatch( routParsedCurrentMatching.listObjAttribute );
+      }
+
+    // NOT Matching
+    // If there is NO matching Subscriber/Rout, and we have a Callback to call when doesnt match
+    } else if ( typeof fnToCallIfDoesntMatch !== 'undefined' ) {
+      // If Rout was active with prev Path
+      // Note: it makes sure that "fnToCallIfDoesntMatch" is called only once
+      if (fnToCallIfMatch.isActive) {
+        fnToCallIfMatch.isActive = false;
+        fnToCallIfDoesntMatch();
+      }
+
+      return '';
+
+    } else {
+      return '';
+    }
   }
 
   fireAllSub () {
@@ -751,21 +797,12 @@ class Router {
     }
   }
 
-  rout ( pathToMatch, fnToCallIfMatch ) {
+  // todo: implement fnToCallIfDoesntMatch
+  rout ( pathToMatch, fnToCallIfMatch, fnToCallIfDoesntMatch ) {
     this.subToHashChange( pathToMatch, () => {
-      this.runIfPathMatch( pathToMatch, fnToCallIfMatch );
-    });
+      this.runIfPathMatch( pathToMatch, fnToCallIfMatch, fnToCallIfDoesntMatch, true );
+    }, fnToCallIfDoesntMatch);
   }
-
-  // fireAllSubOld() {
-  //   for (let pathListSub in this.listObjPathListSub) {
-  //     const listSub = this.listObjPathListSub[ pathListSub ];
-  //     for (let indexListSub = 0; indexListSub < listSub.length; indexListSub++) {
-  //       const sub = listSub[ indexListSub ];
-  //       sub( pathListSub );
-  //     }
-  //   }
-  // }
 }
 
 

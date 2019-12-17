@@ -8,11 +8,15 @@ export class Rout extends Component {
         idChange: this.uid(),
       });
     });
+
+    this.includeComp = this.includeComp.bind( this );
+  }
+
+  includeComp( attrib ) {
+    return this.include(this.config, attrib);
   }
 
   render( path ) {
-    return gameGUIRouter.runIfPathMatch( path, (attrib) =>
-      this.include(this.config, attrib)
-    );
+    return gameGUIRouter.runIfPathMatch( path, this.includeComp );
   }
 }

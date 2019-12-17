@@ -26,6 +26,8 @@
 <script>
   GameGUI.router.rout('running', function () {
     console.log('"running" Rout fired for Subscriber using API, not Comp.');
+  }, function () {
+    console.log('"running" Rout Destructed for Subscriber using API, not Comp.');
   });
 
   class CompRunning extends GameGUI.Component {
