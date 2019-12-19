@@ -71,6 +71,7 @@ export class GameGUI {
     //       therefore we do it here manually for Root Comp, and child comps are managed the same way.
     this.rootComp.scheduleRendering = this.scheduleRendering.bind( this );
     this.rootComp.indexComp         = this.indexComp.bind( this );
+    this.rootComp.router            = this.router;
 
     // Index Root Comp
     // Root Comp is an Instance of Component, therefore it is indexed the same way as every other Comp Inst.

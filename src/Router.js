@@ -1,19 +1,21 @@
-// todo: make ID as optional specification for routs, otherweise they r useless ..maybe thats okay
+// todo: Get rid of the @ symbol
+// todo: Add feature to discard the rest of the url if necessary @menu:main/setting
 
 export class Router {
   constructor() {
-    this.listRoutParsedCurrent  = [];
-    this.listSub                = [];
-    this.listObjPathListSub     = {}; // note: this is for debugging only
+    this.listObjRoutParsedCurrent = {};
+    this.listSub                  = [];
+    this.listObjPathListSub       = {}; // note: this is for debugging only
 
     window.addEventListener("hashchange", this.handlerHashChange.bind( this ), false);
     this.handlerHashChange();
   }
 
-  getHash() {
+  getHash( hashInput ) {
     // Filter off "#"
     // Note: no str.replace(..) cos its slow
-    const hashRawParts = location.hash.split('#');
+    const hashUpdate = hashInput || location.hash;
+    const hashRawParts = hashUpdate.split('#');
 
     if ( 2 < hashRawParts.length ) {
       throw 'Only one "#" is allowed in the URL.';
@@ -22,8 +24,8 @@ export class Router {
     return hashRawParts.join('');
   }
 
-  getListRout() {
-    const hash = this.getHash();
+  getListRout( hashInput ) {
+    const hash = this.getHash( hashInput );
 
     // Single Rout in hash
     if (hash.indexOf('@') === -1 ) {
@@ -76,10 +78,16 @@ export class Router {
 
   handlerHashChange () {
     const listRoutStr = this.getListRout();
-    this.listRoutParsedCurrent = listRoutStr.map(rout => this.processRout(rout));
+    const listObjRoutParsedCurrentUpdate = {};
+    listRoutStr.forEach(routStr => {
+      const routObj = this.processRout( routStr );
+      listObjRoutParsedCurrentUpdate[ routObj.id ] = routObj;
+    });
+
+    this.listObjRoutParsedCurrent = listObjRoutParsedCurrentUpdate;
 
     this.fireAllSub();
-    console.log('this.listRoutParsedCurrent:', this.listRoutParsedCurrent);
+    console.log('this.listObjRoutParsedCurrent:', this.listObjRoutParsedCurrent);
   }
 
   subToHashChange ( pathToMatch, fnToCallIfMatch, fnToCallIfDoesntMatch ) {
@@ -98,8 +106,8 @@ export class Router {
 
     // Search
     // Iterate List of Current Routs/Paths
-    for ( let indexListRout=0; indexListRout<this.listRoutParsedCurrent.length; indexListRout++ ) {
-      const routParsedCurrent = this.listRoutParsedCurrent[ indexListRout ];
+    for ( let idListRout in this.listObjRoutParsedCurrent) {
+      const routParsedCurrent = this.listObjRoutParsedCurrent[ idListRout ];
 
       // If Current Routs/Paths Iter matching Path that we are searching for
       // Note: Match it only to the left, e.g.: main/setting & main/setting/audio
@@ -155,6 +163,74 @@ export class Router {
     this.subToHashChange( pathToMatch, () => {
       this.runIfPathMatch( pathToMatch, fnToCallIfMatch, fnToCallIfDoesntMatch, true );
     }, fnToCallIfDoesntMatch );
+  }
+
+  updateHash ( hashNew ) {
+    console.log('new Hahs', hashNew);
+
+    const listRoutStr = this.getListRout( hashNew );
+
+    const listObjRoutParsedNew = {};
+    listRoutStr.forEach(routStr => {
+      const routObj = this.processRout( routStr );
+      listObjRoutParsedNew[ routObj.id ] = routObj;
+    });
+
+    console.log('listObjRoutParsedNew', listObjRoutParsedNew);
+
+    // Update Hash on record
+    const listObjRoutParsedUpdate = {
+      ...this.listObjRoutParsedCurrent,
+      ...listObjRoutParsedNew
+    };
+
+    console.log('listObjRoutParsedUpdate', listObjRoutParsedUpdate);
+
+    const hashUpdated = this.reconstructHash( listObjRoutParsedUpdate );
+    location.hash = hashUpdated;
+  }
+
+  reconstructHash( listObjRoutParsedUpdate ) {
+    let hashUpdated = '';
+
+    // Multiple routs on record
+    if ( 1 < Object.keys(listObjRoutParsedUpdate).length ) {
+      for (let idObjRoutParsedCurrent in listObjRoutParsedUpdate) {
+        const objRoutParsedCurrent = listObjRoutParsedUpdate[ idObjRoutParsedCurrent ];
+
+        console.log('objRoutParsedCurrent', objRoutParsedCurrent);
+
+        hashUpdated += '@' + objRoutParsedCurrent.id + ':' + objRoutParsedCurrent.path;
+
+        if ( typeof objRoutParsedCurrent.listObjAttribute !== 'undefined' ) {
+          hashUpdated += '?';
+          let noAttribute = 0;
+          Object.keys(objRoutParsedCurrent.listObjAttribute).forEach(attributeKey => {
+            if ( 0 < noAttribute)
+              hashUpdated += '&';
+
+            const attributeValue = objRoutParsedCurrent.listObjAttribute[ attributeKey ];
+            // Boolean
+            if ( typeof attributeValue === 'boolean' && attributeValue) {
+              hashUpdated += attributeKey;
+            // Anything but Boolean
+            } else {
+              hashUpdated += attributeKey + '=' + objRoutParsedCurrent.listObjAttribute[ attributeKey ];
+            }
+
+            noAttribute++;
+          });
+        }
+
+        console.log('hashUpdated', hashUpdated);
+      }
+
+    // Single Rout on record
+    } else {
+
+    }
+
+    return hashUpdated;
   }
 }
 

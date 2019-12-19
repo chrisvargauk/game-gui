@@ -92,6 +92,7 @@ export class Component {
         //       therefore there is no problem hooking them up after Comp Instantiation.
         compChild.scheduleRendering = this.scheduleRendering;
         compChild.indexComp         = this.indexComp;
+        compChild.router            = this.router;
 
         // Index Comp right after its created and even before its rendered.
         // Note: The rendering of Root Comp will trigger the indexing of all Sub Comps.
@@ -218,18 +219,31 @@ export class Component {
   doBind () {
     // ui-click | Do click handler bindings automatically right after rendering
     // Note: Binding happens before Child Comps are injected so Encapsulation is unharmed
-    const listNodeBtn = this.dom.querySelectorAll('[ui-click]');
-    for (let indexListNodeBtn = 0; indexListNodeBtn < listNodeBtn.length; indexListNodeBtn++) {
-      const nodeBtn = listNodeBtn[ indexListNodeBtn ];
+    const listNodeBtnUiClick = this.dom.querySelectorAll('[ui-click]');
+    for (let indexListNodeBtnUiClick = 0; indexListNodeBtnUiClick < listNodeBtnUiClick.length; indexListNodeBtnUiClick++) {
+      const nodeBtnUiClick = listNodeBtnUiClick[ indexListNodeBtnUiClick ];
 
-      const nameHandler = nodeBtn.getAttribute('ui-click');
+      const nameHandler = nodeBtnUiClick.getAttribute('ui-click');
       if (typeof this[nameHandler] === 'undefined') {
         console.warn(`Game GUI: click handler called "${nameHandler}" can't be found on the Component (type === '${this.type}', id: ${this.id}).`);
         continue;
       }
 
-      nodeBtn.addEventListener('click', this[nameHandler].bind(this), false);
+      nodeBtnUiClick.addEventListener('click', this[nameHandler].bind(this), false);
     }
+
+    // ui-link | Do link bindings automatically right after rendering
+    // Note: Binding happens before Child Comps are injected so Encapsulation is unharmed
+    const listNodeBtnUiLink = this.dom.querySelectorAll('[ui-link]');
+    for (let indexListNodeBtnUiLink = 0; indexListNodeBtnUiLink < listNodeBtnUiLink.length; indexListNodeBtnUiLink++) {
+      const nodeBtnUiLink = listNodeBtnUiLink[ indexListNodeBtnUiLink ];
+
+      const url = nodeBtnUiLink.getAttribute('ui-link');
+      nodeBtnUiLink.addEventListener('click', () => {
+        this.router.updateHash('#'+url);
+      }, false);
+    }
+
   }
 
   replaceCompPlaceholderAll () {

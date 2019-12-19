@@ -200,6 +200,7 @@ class Component {
         //       therefore there is no problem hooking them up after Comp Instantiation.
         compChild.scheduleRendering = this.scheduleRendering;
         compChild.indexComp         = this.indexComp;
+        compChild.router            = this.router;
 
         // Index Comp right after its created and even before its rendered.
         // Note: The rendering of Root Comp will trigger the indexing of all Sub Comps.
@@ -326,18 +327,32 @@ class Component {
   doBind () {
     // ui-click | Do click handler bindings automatically right after rendering
     // Note: Binding happens before Child Comps are injected so Encapsulation is unharmed
-    const listNodeBtn = this.dom.querySelectorAll('[ui-click]');
-    for (let indexListNodeBtn = 0; indexListNodeBtn < listNodeBtn.length; indexListNodeBtn++) {
-      const nodeBtn = listNodeBtn[ indexListNodeBtn ];
+    const listNodeBtnUiClick = this.dom.querySelectorAll('[ui-click]');
+    for (let indexListNodeBtnUiClick = 0; indexListNodeBtnUiClick < listNodeBtnUiClick.length; indexListNodeBtnUiClick++) {
+      const nodeBtnUiClick = listNodeBtnUiClick[ indexListNodeBtnUiClick ];
 
-      const nameHandler = nodeBtn.getAttribute('ui-click');
+      const nameHandler = nodeBtnUiClick.getAttribute('ui-click');
       if (typeof this[nameHandler] === 'undefined') {
         console.warn(`Game GUI: click handler called "${nameHandler}" can't be found on the Component (type === '${this.type}', id: ${this.id}).`);
         continue;
       }
 
-      nodeBtn.addEventListener('click', this[nameHandler].bind(this), false);
+      nodeBtnUiClick.addEventListener('click', this[nameHandler].bind(this), false);
     }
+
+    // ui-link | Do click link handler bindings automatically right after rendering
+    // Note: Binding happens before Child Comps are injected so Encapsulation is unharmed
+    const listNodeBtnUiLink = this.dom.querySelectorAll('[ui-link]');
+    for (let indexListNodeBtnUiLink = 0; indexListNodeBtnUiLink < listNodeBtnUiLink.length; indexListNodeBtnUiLink++) {
+      const nodeBtnUiLink = listNodeBtnUiLink[ indexListNodeBtnUiLink ];
+
+      const url = nodeBtnUiLink.getAttribute('ui-link');
+      nodeBtnUiLink.addEventListener('click', () => {
+        this.router.updateHash('#'+url);
+      }, false);
+      // nodeBtnUiLink.addEventListener('click', this[nameHandler].bind(this), false);
+    }
+
   }
 
   replaceCompPlaceholderAll () {
@@ -490,6 +505,7 @@ class GameGUI {
     //       therefore we do it here manually for Root Comp, and child comps are managed the same way.
     this.rootComp.scheduleRendering = this.scheduleRendering.bind( this );
     this.rootComp.indexComp         = this.indexComp.bind( this );
+    this.rootComp.router            = this.router;
 
     // Index Root Comp
     // Root Comp is an Instance of Component, therefore it is indexed the same way as every other Comp Inst.
@@ -628,7 +644,7 @@ class Rout extends _Component__WEBPACK_IMPORTED_MODULE_0__["default"] {
 /*!***********************!*\
   !*** ./src/Router.js ***!
   \***********************/
-/*! exports provided: Router, Rout, router, default */
+/*! exports provided: Router, router, default, Rout */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -639,22 +655,22 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "Rout", function() { return _Rout__WEBPACK_IMPORTED_MODULE_0__["Rout"]; });
 
 // todo: make ID as optional specification for routs, otherweise they r useless ..maybe thats okay
-// todo: Make native API work when page fired up the first time, not only at updates
 
 class Router {
   constructor() {
-    this.listRoutParsedCurrent  = [];
-    this.listSub                = [];
-    this.listObjPathListSub     = {}; // note: this is for debugging only
+    this.listObjRoutParsedCurrent = {};
+    this.listSub                  = [];
+    this.listObjPathListSub       = {}; // note: this is for debugging only
 
     window.addEventListener("hashchange", this.handlerHashChange.bind( this ), false);
     this.handlerHashChange();
   }
 
-  getHash() {
+  getHash( hashInput ) {
     // Filter off "#"
     // Note: no str.replace(..) cos its slow
-    const hashRawParts = location.hash.split('#');
+    const hashUpdate = hashInput || location.hash;
+    const hashRawParts = hashUpdate.split('#');
 
     if ( 2 < hashRawParts.length ) {
       throw 'Only one "#" is allowed in the URL.';
@@ -663,8 +679,8 @@ class Router {
     return hashRawParts.join('');
   }
 
-  getListRout() {
-    const hash = this.getHash();
+  getListRout( hashInput ) {
+    const hash = this.getHash( hashInput );
 
     // Single Rout in hash
     if (hash.indexOf('@') === -1 ) {
@@ -717,10 +733,16 @@ class Router {
 
   handlerHashChange () {
     const listRoutStr = this.getListRout();
-    this.listRoutParsedCurrent = listRoutStr.map(rout => this.processRout(rout));
+    const listObjRoutParsedCurrentUpdate = {};
+    listRoutStr.forEach(routStr => {
+      const routObj = this.processRout( routStr );
+      listObjRoutParsedCurrentUpdate[ routObj.id ] = routObj;
+    });
+
+    this.listObjRoutParsedCurrent = listObjRoutParsedCurrentUpdate;
 
     this.fireAllSub();
-    console.log('this.listRoutParsedCurrent:', this.listRoutParsedCurrent);
+    console.log('this.listObjRoutParsedCurrent:', this.listObjRoutParsedCurrent);
   }
 
   subToHashChange ( pathToMatch, fnToCallIfMatch, fnToCallIfDoesntMatch ) {
@@ -739,18 +761,13 @@ class Router {
 
     // Search
     // Iterate List of Current Routs/Paths
-    for ( let indexListRout=0; indexListRout<this.listRoutParsedCurrent.length; indexListRout++ ) {
-      const routParsedCurrent = this.listRoutParsedCurrent[ indexListRout ];
+    for ( let idListRout in this.listObjRoutParsedCurrent) {
+      const routParsedCurrent = this.listObjRoutParsedCurrent[ idListRout ];
 
       // If Current Routs/Paths Iter matching Path that we are searching for
       // Note: Match it only to the left, e.g.: main/setting & main/setting/audio
       if ( routParsedCurrent.path.indexOf(pathToMatch) === 0 ) {
         routParsedCurrentMatching = routParsedCurrent;
-
-        // // If Path was inactive up to now
-        // if ( !fnToCallIfMatch.isActive ) {
-        //   fnToCallIfMatch.isActive = true;
-        // }
       }
     }
 
@@ -797,11 +814,78 @@ class Router {
     }
   }
 
-  // todo: implement fnToCallIfDoesntMatch
   rout ( pathToMatch, fnToCallIfMatch, fnToCallIfDoesntMatch ) {
     this.subToHashChange( pathToMatch, () => {
       this.runIfPathMatch( pathToMatch, fnToCallIfMatch, fnToCallIfDoesntMatch, true );
-    }, fnToCallIfDoesntMatch);
+    }, fnToCallIfDoesntMatch );
+  }
+
+  updateHash ( hashNew ) {
+    console.log('new Hahs', hashNew);
+
+    const listRoutStr = this.getListRout( hashNew );
+
+    const listObjRoutParsedNew = {};
+    listRoutStr.forEach(routStr => {
+      const routObj = this.processRout( routStr );
+      listObjRoutParsedNew[ routObj.id ] = routObj;
+    });
+
+    console.log('listObjRoutParsedNew', listObjRoutParsedNew);
+
+    // Update Hash on record
+    const listObjRoutParsedUpdate = {
+      ...this.listObjRoutParsedCurrent,
+      ...listObjRoutParsedNew
+    };
+
+    console.log('listObjRoutParsedUpdate', listObjRoutParsedUpdate);
+
+    const hashUpdated = this.reconstructHash( listObjRoutParsedUpdate );
+    location.hash = hashUpdated;
+  }
+
+  reconstructHash( listObjRoutParsedUpdate ) {
+    let hashUpdated = '';
+
+    // Multiple routs on record
+    if ( 1 < Object.keys(listObjRoutParsedUpdate).length ) {
+      for (let idObjRoutParsedCurrent in listObjRoutParsedUpdate) {
+        const objRoutParsedCurrent = listObjRoutParsedUpdate[ idObjRoutParsedCurrent ];
+
+        console.log('objRoutParsedCurrent', objRoutParsedCurrent);
+
+        hashUpdated += '@' + objRoutParsedCurrent.id + ':' + objRoutParsedCurrent.path;
+
+        if ( typeof objRoutParsedCurrent.listObjAttribute !== 'undefined' ) {
+          hashUpdated += '?';
+          let noAttribute = 0;
+          Object.keys(objRoutParsedCurrent.listObjAttribute).forEach(attributeKey => {
+            if ( 0 < noAttribute)
+              hashUpdated += '&';
+
+            const attributeValue = objRoutParsedCurrent.listObjAttribute[ attributeKey ];
+            // Boolean
+            if ( typeof attributeValue === 'boolean' && attributeValue) {
+              hashUpdated += attributeKey;
+            // Anything but Boolean
+            } else {
+              hashUpdated += attributeKey + '=' + objRoutParsedCurrent.listObjAttribute[ attributeKey ];
+            }
+
+            noAttribute++;
+          });
+        }
+
+        console.log('hashUpdated', hashUpdated);
+      }
+
+    // Single Rout on record
+    } else {
+
+    }
+
+    return hashUpdated;
   }
 }
 
