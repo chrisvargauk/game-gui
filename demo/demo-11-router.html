@@ -66,16 +66,16 @@
         <hr>
 
         <h3>Single Rout</h3>
-        <a href="#@game:running?user=Jane&age=20&foo">#@game:running?user=Jane&age=20&foo</a>
+        <a href="#game:running?user=Jane&age=20&foo">#game:running?user=Jane&age=20&foo</a>
 
         <h3>Multiple Routs</h3>
-        <a href="#@menu:main/account@game:running?user=Jane&age=20&foo">#@menu:main/account@game:running?user=Jane&age=20&foo</a>
+        <a href="#menu:main/account|game:running?user=Jane&age=20&foo">#menu:main/account|game:running?user=Jane&age=20&foo</a>
 
         <h3>Multiple Routs / address one rout, keep others as is - js in href</h3>
-        <a href="javascript:GameGUI.router.updateHash('#@menu:main/setting');">#@menu:main/setting</a>
+        <a href="javascript:GameGUI.router.updateHash('#menu:main/setting');">#menu:main/setting</a>
 
         <h3>Multiple Routs / address one rout, keep others as is - ui-link attrib</h3>
-        <span ui-link="@menu:main/setting">#@menu:main/setting</span>
+        <span ui-link="menu:main/setting">#menu:main/setting</span>
 
         <h3>No Matching Rout</h3>
         <a href="#notRunning?user=Jane&age=37&foo&bar">#notRunning?user=Jane&age=37&foo&bar</a>
