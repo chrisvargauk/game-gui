@@ -3,7 +3,7 @@ export class GameGUI {
     // Reg Root Comp automatically if requirements are fulfilled
     // Note: don't run it by default, you may want to control the steps.
     if (typeof RootComp === 'undefined' ||
-        typeof selectorGuiRoot === 'undefined'
+      typeof selectorGuiRoot === 'undefined'
     ) {
       return;
     }

@@ -27,7 +27,7 @@ describe('Component', () => {
 
     it('Arguments "option" and "config" are optional.', () => {
       let componentTest,
-          error = false;
+        error = false;
       try {
         componentTest = new ComponentTest();
       } catch ( err ) {
@@ -69,9 +69,9 @@ describe('Component', () => {
 
     it('Should have the rest of the default props set correctly', () => {
       const option = {},
-            config = {
-              id: 'static-id-for-test-sake'
-            };
+        config = {
+          id: 'static-id-for-test-sake'
+        };
       const componentTest = new ComponentTest( option, config );
       expect( componentTest ).toMatchSnapshot();
     });
@@ -563,8 +563,8 @@ describe('Component', () => {
             compParent.renderToHtmlAndDomify();
 
             let compChildBoth  = `<div class="${compChildA.classNameInHtml}" id="${compChildA.id}">${compChildA.dom.innerHTML}</div>`;
-                compChildBoth += `-`;
-                compChildBoth += `<div class="${compChildB.classNameInHtml}" id="${compChildB.id}">${compChildB.dom.innerHTML}</div>`;
+            compChildBoth += `-`;
+            compChildBoth += `<div class="${compChildB.classNameInHtml}" id="${compChildB.id}">${compChildB.dom.innerHTML}</div>`;
             expect( compParent.dom.innerHTML ).toBe(`...${compChildBoth}...`);
           });
 
@@ -576,8 +576,8 @@ describe('Component', () => {
             compParent.renderToHtmlAndDomify();
 
             let compChildBoth  = `<div class="${compChildA.classNameInHtml}" id="${compChildA.id}">${compChildA.dom.innerHTML}</div>`;
-                compChildBoth += `-`;
-                compChildBoth += `<div class="${compChildC.classNameInHtml}" id="${compChildC.id}">${compChildC.dom.innerHTML}</div>`;
+            compChildBoth += `-`;
+            compChildBoth += `<div class="${compChildC.classNameInHtml}" id="${compChildC.id}">${compChildC.dom.innerHTML}</div>`;
             expect( compParent.dom.innerHTML ).toBe(`...${compChildBoth}...`);
           });
         });
@@ -631,8 +631,8 @@ describe('Component', () => {
             compParent.renderToHtmlAndDomify();
 
             let compChildBoth  = `<div class="${compChildA.classNameInHtml}" id="${compChildA.id}">${compChildA.dom.innerHTML}</div>`;
-                compChildBoth += `-`;
-                compChildBoth += `<div class="${compChildB.classNameInHtml}" id="${compChildB.id}">${compChildB.dom.innerHTML}</div>`;
+            compChildBoth += `-`;
+            compChildBoth += `<div class="${compChildB.classNameInHtml}" id="${compChildB.id}">${compChildB.dom.innerHTML}</div>`;
             expect( compParent.dom.innerHTML ).toBe(`...${compChildBoth}...`);
           });
 
@@ -644,8 +644,8 @@ describe('Component', () => {
             compParent.renderToHtmlAndDomify();
 
             let compChildBoth  = `<div class="${compChildA.classNameInHtml}" id="${compChildA.id}">${compChildA.dom.innerHTML}</div>`;
-                compChildBoth += `-`;
-                compChildBoth += `<div class="${compChildC.classNameInHtml}" id="${compChildC.id}">${compChildC.dom.innerHTML}</div>`;
+            compChildBoth += `-`;
+            compChildBoth += `<div class="${compChildC.classNameInHtml}" id="${compChildC.id}">${compChildC.dom.innerHTML}</div>`;
             expect( compParent.dom.innerHTML ).toBe(`...${compChildBoth}...`);
           });
         });
@@ -699,8 +699,8 @@ describe('Component', () => {
             compParent.renderToHtmlAndDomify();
 
             let compChildBoth  = `<div class="${compChildA.classNameInHtml}" id="${compChildA.id}">${compChildA.dom.innerHTML}</div>`;
-                compChildBoth += `-`;
-                compChildBoth += `<div class="${compChildB.classNameInHtml}" id="${compChildB.id}">${compChildB.dom.innerHTML}</div>`;
+            compChildBoth += `-`;
+            compChildBoth += `<div class="${compChildB.classNameInHtml}" id="${compChildB.id}">${compChildB.dom.innerHTML}</div>`;
             expect( compParent.dom.innerHTML ).toBe(`...${compChildBoth}...`);
           });
 
@@ -712,8 +712,8 @@ describe('Component', () => {
             compParent.renderToHtmlAndDomify();
 
             let compChildBoth  = `<div class="${compChildA.classNameInHtml}" id="${compChildA.id}">${compChildA.dom.innerHTML}</div>`;
-                compChildBoth += `-`;
-                compChildBoth += `<div class="${compChildC.classNameInHtml}" id="${compChildC.id}">${compChildC.dom.innerHTML}</div>`;
+            compChildBoth += `-`;
+            compChildBoth += `<div class="${compChildC.classNameInHtml}" id="${compChildC.id}">${compChildC.dom.innerHTML}</div>`;
             expect( compParent.dom.innerHTML ).toBe(`...${compChildBoth}...`);
           });
         });
@@ -762,8 +762,8 @@ describe('Component', () => {
           compParent.renderToHtmlAndDomify();
 
           let compChildBoth  = `<div class="comp-placeholder" type="${compChildA.type}" ctr-child="0" id-from-config="id-a">placeholder text</div>`;
-              compChildBoth += `-`;
-              compChildBoth += `<div class="${compChildB.classNameInHtml}" id="${compChildB.id}">${compChildB.dom.innerHTML}</div>`;
+          compChildBoth += `-`;
+          compChildBoth += `<div class="${compChildB.classNameInHtml}" id="${compChildB.id}">${compChildB.dom.innerHTML}</div>`;
           expect( compParent.dom.innerHTML ).toBe(`...${compChildBoth}...`);
           expect(console.warn).toHaveBeenCalled();
         });
@@ -821,8 +821,8 @@ describe('Component', () => {
             compParent.renderToHtmlAndDomify();
 
             let compChildBoth  = `<div class="${compChildA.classNameInHtml}" id="${compChildA.id}">${compChildA.dom.innerHTML}</div>`;
-                compChildBoth += `-`;
-                compChildBoth += `<div class="${compChildB.classNameInHtml}" id="${compChildB.id}">${compChildB.dom.innerHTML}</div>`;
+            compChildBoth += `-`;
+            compChildBoth += `<div class="${compChildB.classNameInHtml}" id="${compChildB.id}">${compChildB.dom.innerHTML}</div>`;
             expect( compParent.dom.innerHTML ).toBe(`...${compChildBoth}...`);
           });
 
@@ -834,8 +834,8 @@ describe('Component', () => {
             compParent.renderToHtmlAndDomify();
 
             let compChildBoth  = `<div class="${compChildA.classNameInHtml}" id="${compChildA.id}">${compChildA.dom.innerHTML}</div>`;
-                compChildBoth += `-`;
-                compChildBoth += `<div class="${compChildC.classNameInHtml}" id="${compChildC.id}">${compChildC.dom.innerHTML}</div>`;
+            compChildBoth += `-`;
+            compChildBoth += `<div class="${compChildC.classNameInHtml}" id="${compChildC.id}">${compChildC.dom.innerHTML}</div>`;
             expect( compParent.dom.innerHTML ).toBe(`...${compChildBoth}...`);
           });
         });
@@ -965,8 +965,8 @@ describe('Component', () => {
             compParent.renderToHtmlAndDomify();
 
             let compChildBoth  = `<div class="${compChildA.classNameInHtml}" id="${compChildA.id}">${compChildA.dom.innerHTML}</div>`;
-                compChildBoth += `-`;
-                compChildBoth += `<div class="${compChildC_a.classNameInHtml}" id="${compChildC_a.id}">${compChildC_a.dom.innerHTML}</div>`;
+            compChildBoth += `-`;
+            compChildBoth += `<div class="${compChildC_a.classNameInHtml}" id="${compChildC_a.id}">${compChildC_a.dom.innerHTML}</div>`;
             expect( compParent.dom.innerHTML ).toBe(`...${compChildBoth}...`);
           });
 

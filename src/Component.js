@@ -9,10 +9,10 @@ export class Component {
     this.type                       = this.getTypeOfComp( this );
     this.classNameInHtml            = this.camelCaseToSnakeCase( this.type );
     this.dom                        = this.createDomRepresentation();
-                                      // Note: "this.dom" this is a wrapper element. The output of "this.render(..)"
-                                      // is placed inside this wrapper. The wrapper is created only once at
-                                      // Comp instantiation, but its content is created from scratch, then injected at
-                                      // every Comp Render call - at this.render(..).
+    // Note: "this.dom" this is a wrapper element. The output of "this.render(..)"
+    // is placed inside this wrapper. The wrapper is created only once at
+    // Comp instantiation, but its content is created from scratch, then injected at
+    // every Comp Render call - at this.render(..).
     this.listObjCompChildByType     = {}; // Cache previously rendered Comps here.
     this.html                       = '';
     this.ctrChildByType             = {};
@@ -64,8 +64,8 @@ export class Component {
     if ( ClassComp.prototype instanceof Component ) {
       const typeComp = ClassComp.name;
       const ctrChild = this.ctrChildByType[ typeComp ] = typeof this.ctrChildByType[ typeComp ] === 'undefined' ?
-                                                            0                                                   :
-                                                            ++this.ctrChildByType[ typeComp ];
+        0                                                   :
+        ++this.ctrChildByType[ typeComp ];
 
       const idCompChild = (config && typeof config.id !== 'undefined') ? config.id : ctrChild;
       this.listObjCompChildByType[ typeComp ] = this.listObjCompChildByType[ typeComp ] || {};
@@ -107,7 +107,7 @@ export class Component {
 
       return `<div class="comp-placeholder" type="${typeComp}" id-from-config="${idFromConfig}" ctr-child="${ctrChild}">placeholder text</div>`;
 
-    // If Dumb Comp (Function)
+      // If Dumb Comp (Function)
     } else {
       return ClassComp( dataFromParent, this.option );
     }
@@ -126,8 +126,8 @@ export class Component {
     // Don't skip if HTML representation of Comp has never been rendered yet.
     // Skip only if Data Passed In From Parent Comp hasn't changed and the sate of the Comp hasn't changed either
     if (this.html !== '' &&
-        !renderBecauseDataPassedInChanged &&
-        !this.isStateUpdated
+      !renderBecauseDataPassedInChanged &&
+      !this.isStateUpdated
     ) {
       return false;
     }
@@ -174,7 +174,7 @@ export class Component {
 
     // Scenario 1)  prev === undefined && passed === undefined --> DON'T RENDER
     if ( isUndefinedDataFromParentAsStringPrev &&
-         isUndefinedDataFromParentAsString
+      isUndefinedDataFromParentAsString
     ) {
       return false;
     }
@@ -183,7 +183,7 @@ export class Component {
 
     // Scenario 2)  prev === undefined && passed !== undefined --> RENDER
     if ( isUndefinedDataFromParentAsStringPrev &&
-         !isUndefinedDataFromParentAsString
+      !isUndefinedDataFromParentAsString
     ) {
       this.dataFromParentAsStringPrev = dataFromParentAsString;
       return true;
@@ -191,7 +191,7 @@ export class Component {
 
     // Scenario 3)  prev !== undefined && passed === undefined --> RENDER
     if ( !isUndefinedDataFromParentAsStringPrev &&
-         isUndefinedDataFromParentAsString
+      isUndefinedDataFromParentAsString
     ) {
       this.dataFromParentAsStringPrev = dataFromParentAsString;
       return true;
@@ -199,13 +199,13 @@ export class Component {
 
     // Scenario 4)  prev !== undefined && passed !== undefined --> COMPARE
     if ( !isUndefinedDataFromParentAsStringPrev &&
-         !isUndefinedDataFromParentAsString
+      !isUndefinedDataFromParentAsString
     ) {
       // Compare / same       --> DON'T RENDER
       if ( this.dataFromParentAsStringPrev === dataFromParentAsString) {
         return false;
 
-      // Compare / different  --> RENDER
+        // Compare / different  --> RENDER
       } else {
         this.dataFromParentAsStringPrev = dataFromParentAsString;
         return true;
@@ -213,7 +213,7 @@ export class Component {
     }
 
     console.error('Something unexpected happened o_0?');
-    debugger;
+  debugger;
   }
 
   doBindExternal() {

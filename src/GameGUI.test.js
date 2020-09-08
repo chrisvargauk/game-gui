@@ -26,11 +26,11 @@ describe('Game GUI', () => {
     }
 
     const selectorGuiRoot = '#ui-rout',
-          option          = {foo: 'foo'},
-          configRootComp  = {bar: 'bar'};
+      option          = {foo: 'foo'},
+      configRootComp  = {bar: 'bar'};
 
     let gameGui,
-        RootCompMock;
+      RootCompMock;
 
     beforeAll(() => {
       GameGUICopy.prototype.init            = jest.fn();
@@ -290,19 +290,19 @@ describe('Game GUI', () => {
 
     describe('Should', () => {
       const renderToHtmlAndDomifyA = jest.fn(),
-            renderToHtmlAndDomifyB = jest.fn(),
-            renderEvtHandlerExtA   = jest.fn(),
-            renderEvtHandlerExtB   = jest.fn(),
-            dataFromParentPrev     = {foo: 'bar'};
+        renderToHtmlAndDomifyB = jest.fn(),
+        renderEvtHandlerExtA   = jest.fn(),
+        renderEvtHandlerExtB   = jest.fn(),
+        dataFromParentPrev     = {foo: 'bar'};
       const compA                  = {
-              id:                    'compA',
-              renderToHtmlAndDomify: renderToHtmlAndDomifyA,
-            },
-            compB                  = {
-              id:                    'compB',
-              renderToHtmlAndDomify: renderToHtmlAndDomifyB,
-              dataFromParentAsStringPrev: JSON.stringify( dataFromParentPrev),
-            };
+          id:                    'compA',
+          renderToHtmlAndDomify: renderToHtmlAndDomifyA,
+        },
+        compB                  = {
+          id:                    'compB',
+          renderToHtmlAndDomify: renderToHtmlAndDomifyB,
+          dataFromParentAsStringPrev: JSON.stringify( dataFromParentPrev),
+        };
 
       const gameGUIMock = createMockGameGuiInstance();
 
