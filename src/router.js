@@ -34,10 +34,10 @@ export class Router {
     if (hash.indexOf('|') === -1 ) {
       return [hash];
 
-    // Multiple Routs in hash
+      // Multiple Routs in hash
     } else {
       return hash.split('|')
-                 .filter( rout => rout !== '');
+        .filter( rout => rout !== '');
     }
   }
 
@@ -80,7 +80,7 @@ export class Router {
         }
       });
 
-    // If NO Attribute is provided in Rout
+      // If NO Attribute is provided in Rout
     } else {
       routProcessed.path = routRemaining;
     }
@@ -128,8 +128,8 @@ export class Router {
 
       // If Current Routs/Paths Iter matching Path that we are searching for
       if (routParsedCurrent.id === idToMatch &&
-          // Note: Partial Matching to Left: Match it only to the left, e.g.: main/setting & main/setting/audio
-          routParsedCurrent.path.indexOf(pathToMatch) === 0
+        // Note: Partial Matching to Left: Match it only to the left, e.g.: main/setting & main/setting/audio
+        routParsedCurrent.path.indexOf(pathToMatch) === 0
       ) {
         routParsedCurrentMatching = routParsedCurrent;
       }
@@ -146,7 +146,7 @@ export class Router {
           fnToCallIfMatch.listObjAttribute = routParsedCurrentMatching.listObjAttribute;
           return fnToCallIfMatch( routParsedCurrentMatching.listObjAttribute );
 
-        // If Path was inactivated by prev path
+          // If Path was inactivated by prev path
         } else {
           return '';
         }
@@ -155,8 +155,8 @@ export class Router {
         return fnToCallIfMatch( routParsedCurrentMatching.listObjAttribute );
       }
 
-    // NOT Matching
-    // If there is NO matching Subscriber/Rout, and we have a Callback to call when doesnt match
+      // NOT Matching
+      // If there is NO matching Subscriber/Rout, and we have a Callback to call when doesnt match
     } else if ( typeof fnToCallIfDoesntMatch !== 'undefined' ) {
       // If Rout was active with prev Path
       // Note: it makes sure that "fnToCallIfDoesntMatch" is called only once
@@ -230,7 +230,7 @@ export class Router {
         ctrRout++;
       }
 
-    // Single Rout on record
+      // Single Rout on record
     } else {
       const idRoutObj = Object.keys( listObjByIdRoutObj )[ 0 ];
       const routObj = listObjByIdRoutObj[ idRoutObj ];
