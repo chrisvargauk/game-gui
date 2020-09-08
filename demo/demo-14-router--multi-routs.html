@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <style>
+    body {
+      background: #2f2f2f;
+      color: #ffd600;
+      font-family: monospace, verda;
+      font-size: 13px;
+    }
+
+    a {
+      color: #ff9f26;
+    }
+
+    a:visited {
+      color: #c86f25;
+    }
+  </style>
+</head>
+<body>
+<div id="ui-root"></div>
+<script src="../dist/GameGUI.js"></script>
+<script>
+  const SettingsAccount = (dataInHash) =>(`
+    This is Rout "settings/account",
+    name: ${dataInHash.name},
+    age: ${dataInHash.age},
+    ${dataInHash.foo ? 'foo' : 'no foo'}
+  `);
+  const Game = (dataInHash) =>
+          `Engine is ${dataInHash.state === 'running' ? 'Running' : 'Not Running'}`;
+
+  class MyRootComp extends GameGUI.Component {
+    render () {
+      return `
+        <center><h2>Routing Examples</h2></center>
+        <hr>
+
+        <h3>Simple Links</h3>
+        <i>
+          By Clicking on simple links you can only effect one Rout/Path at any time,
+          and the other Rout/Path is lost, therefore the relevant Component wont render.
+        </i><br>
+        <a href="#menu:settings/account?name=Jane&age=22&foo">Go to Jane's Settings / Account</a> |
+        <a href="#menu:settings/account?name=Joe&age=32">Go to Joe's Settings / Account</a> |
+        <a href="#game:engine?state=running">Start Game Engine</a> |
+        <a href="#game:engine?state=stopped">Stop Game Engine</a><br>
+        <br>
+
+        <h3>Multi-Links</h3>
+        <i>
+          By Clicking on Multi-Links you can effect one Rout/Path at a time,
+          with the difference that the other Rout/Path says as intact, therefore all the relevant Component will render.
+        </i><br>
+        <button gui-href="#menu:settings/account?name=Jane&age=22&foo">Go to Jane's Settings / Account</button> |
+        <button gui-href="#menu:settings/account?name=Joe&age=32">Go to Joe's Settings / Account</button> |
+        <button gui-href="#game:engine?state=running">Start Game Engine</button> |
+        <button gui-href="#game:engine?state=stopped">Stop Game Engine</button><br>
+        <br>
+
+        <h3>Corresponding Components Rendered below:</h3>
+        ${this.include(GameGUI.Rout, 'menu:settings/account',  SettingsAccount)} <br>
+        ${this.include(GameGUI.Rout, 'game:engine',            Game)}
+      `;
+    }
+  }
+
+  const gameGUI = new GameGUI.default(MyRootComp, '#ui-root');
+  GameGUI.router.init( gameGUI );
+</script>
+</body>
+</html>

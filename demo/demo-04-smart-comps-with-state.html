@@ -9,23 +9,32 @@
 <script src="../dist/GameGUI.js"></script>
 <script>
   class MySmartComp extends GameGUI.Component {
-    constructor () {
-      super();
-
+    afterInstantiation () {
       this.setState({
         ctr: 0
       });
+      // Note: You are welcome to use "setState" in the constructor instead of using "afterInstantiation".
+      //       "afterInstantiation" life cycle method is provided to simplify the syntax.
+      //       If you want to use the constructor method, pass along the necessary props:
+      //       YourComp extends Component{
+      //         constructor( option, config, dataFromParent ) {
+      //           super( option, config, dataFromParent );
+      //           ..your logic comes here..
+      //         }
+      //       ...
+      //       }
+
     }
 
     render () {
       return `
-        <div ui-click="handlerUpdateLabel">
+        <div gui-click="handlerUpdateLabel">
           Click Me: ${this.getState().ctr}
         </div>
       `;
     }
 
-    // Ref in the DOM: <div ui-click="handlerUpdateLabel">
+    // Ref in the DOM: <div gui-click="handlerUpdateLabel">
     handlerUpdateLabel() {
       this.setState({
         ctr: this.getState().ctr + 1
@@ -33,7 +42,7 @@
     }
   }
 
-  const gui = new GameGUI.default(MySmartComp, '#ui-root');
+  const gameGUI = new GameGUI.default(MySmartComp, '#ui-root');
 </script>
 </body>
 </html>

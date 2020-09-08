@@ -3,7 +3,7 @@ module.exports = {
   mode: 'development',
 
   entry: {
-    GameGUI: './src/GameGUI.js',
+    GameGUI: './src/index.js',
   },
 
   output: {
@@ -11,6 +11,7 @@ module.exports = {
     libraryTarget: 'umd',
     path: __dirname + '/dist',
     filename: '[name].js',
-  }
+  },
 
+  watch: true,
 };

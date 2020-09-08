@@ -9,9 +9,7 @@
 <script src="../dist/GameGUI.js"></script>
 <script>
   class MySubComp extends GameGUI.Component {
-    constructor (option, config) {
-      super(option, config);
-
+    afterInstantiation () {
       this.setState({
         ctr: 0
       });
@@ -19,15 +17,16 @@
 
     render () {
       return `
-        <fieldset class="my-sub-comp" ui-click="handlerUpdateLabel">
+        <fieldset class="my-sub-comp" gui-click="handlerUpdateLabel">
           <legend>SubComp:</legend>
           My Sub Comp - A - Timestamp changing at ReRendering: ${Date.now()} <br>
+          Ctr below is bumped up from 0 to 2 externally through provided API<br>
           Click Me: ${this.getState().ctr}
         </fieldset>
       `;
     }
 
-    // Ref in the DOM: <div ui-click="handlerUpdateLabel">
+    // Ref in the DOM: <div gui-click="handlerUpdateLabel">
     handlerUpdateLabel() {
       this.setState({
         ctr: this.getState().ctr + 1
@@ -44,16 +43,18 @@
     }
   }
 
-  const gui = new GameGUI.default(MyComp, '#ui-root', {
+  const gameGUI = new GameGUI.default(MyComp, '#ui-root', {
     foo: 'bar'
   });
 
-  gui.getCompByType('MySubComp')[0].setState({
-    ctr: 1
-  });
+  gameGUI.addEventListener('DOMContentLoaded', function () {
+    gameGUI.getListCompByType('MySubComp')[0].setState({
+      ctr: 1
+    });
 
-  gui.getCompById('my-sub-comp-a').setState({
-    ctr: 2
+    gameGUI.getCompById('my-sub-comp-a').setState({
+      ctr: 2
+    });
   });
 </script>
 </body>

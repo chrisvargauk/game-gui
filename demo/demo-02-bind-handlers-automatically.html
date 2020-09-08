@@ -11,17 +11,17 @@
   class MyComp extends GameGUI.Component {
     render () {
       return `
-        <button ui-click="myClickHandler">Click Me!</button>
-        <div ui-click="myClickHandler">Click Me!</div>
+        <button gui-click="myClickHandler">Click Me!</button>
+        <div gui-click="myClickHandler">Click Me!</div>
       `;
     }
 
-    myClickHandler() {
+    myClickHandler(DOMNode, eventType, event) {
       alert('click');
     }
   }
 
-  const gui = new GameGUI.default(MyComp, '#ui-root');
+  const gameGUI = new GameGUI.default(MyComp, '#ui-root');
 </script>
 </body>
 </html>

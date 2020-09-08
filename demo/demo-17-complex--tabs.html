@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <style>
+    body {
+      background: #2f2f2f;
+      color: #ffd600;
+      font-family: monospace, verda;
+      font-size: 13px;
+    }
+
+    a {
+      color: #ff9f26;
+    }
+
+    a:visited {
+      color: #c86f25;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+<div id="ui-root"></div>
+<script src="../dist/GameGUI.js"></script>
+<style>
+  .comp-tab {
+    background: red;
+    width: 100%;
+    overflow: auto;
+  }
+
+  .comp-tab > div {
+    float: left;
+    color: #6d6d6d;
+  }
+
+  .comp-tab > .btn {
+    background: lightgray;
+    cursor: pointer;
+    padding: 5px;
+
+    font-family: monospace;
+    font-size: 14px;
+    font-weight: bold;
+    color: #6d6d6d;
+  }
+
+  .comp-tab > .btn.active {
+    background: #bfbfbf;
+  }
+
+  .comp-tab .tab {
+    width: 100%;
+    background: #efefef;
+
+    display: none;
+  }
+  .comp-tab .tab.active {
+    display: block;
+  }
+
+</style>
+<script>
+  class CompTab extends GameGUI.Component {
+    constructor (option, config) {
+      super(option, config);
+
+      this.noOfTab = Object.keys(this.config.listTab).length;
+
+      this.setState({
+        idTabActive: this.config.idTabActiveDefault
+      });
+    }
+
+    render () {
+      return `
+      ${this.config.listTab.map(tab => (`
+        <div class="btn btn-tab ${this.getState().idTabActive === tab.id ? 'active' : ''}"
+             style="width: ${100/this.noOfTab}%"
+             gui-click="handlerClickTab" data-id="${tab.id}">${tab.label}</div>
+      `)).join('')}
+
+      ${this.config.listTab.map(tab => (`
+        <div class="tab tab-log ${this.getState().idTabActive === tab.id ? 'active' : ''}">
+          ${this.include(tab.content)}
+        </div>
+      `)).join('')}
+    `;
+    }
+
+    handlerClickTab ( domNode ) {
+      this.setState({
+        idTabActive: domNode.dataset.id
+      });
+    }
+  }
+
+  class RootComp extends GameGUI.Component {
+    render () {
+      return `
+        <center><h2>Examples</h2></center>
+        <hr>
+
+        ${this.include(CompTab, null, {
+          listTab: [
+            {
+              id: 'log', label: 'LOGS',
+              content: () => (`
+                <p>LOGS content comes here..</p>
+              `),
+            },
+            {
+              id: 'report', label: 'REPORT',
+              content: () => (`
+                <p>REPORT content comes here..</p>
+              `),
+            },
+            {
+              id: 'setting',label: 'SETTINGS',
+              content: () => (`
+                <p>SETTINGS content comes here..</p>
+              `),
+            }
+          ],
+          idTabActiveDefault: 'report'
+        })}
+      `;
+    }
+  }
+
+  const gameGUI = new GameGUI.default(RootComp, '#ui-root');
+</script>
+</body>
+</html>

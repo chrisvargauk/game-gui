@@ -9,9 +9,7 @@
 <script src="../dist/GameGUI.js"></script>
 <script>
   class MySubComp extends GameGUI.Component {
-    constructor () {
-      super();
-
+    afterInstantiation () {
       this.setState({
         ctr: 0
       });
@@ -19,7 +17,7 @@
 
     render ( dataFromParent ) {
       return `
-        <fieldset ui-click="handlerUpdateLabel">
+        <fieldset gui-click="handlerUpdateLabel">
           <legend>SubComp:</legend>
           Timestamp changing at ReRendering: ${Date.now()} <br>
           Click Me: ${this.getState().ctr} - dataFromParent(if any): ${dataFromParent}
@@ -27,7 +25,7 @@
       `;
     }
 
-    // Ref in the DOM: <div ui-click="handlerUpdateLabel">
+    // Ref in the DOM: <div gui-click="handlerUpdateLabel">
     handlerUpdateLabel() {
       this.setState({
         ctr: this.getState().ctr + 1
@@ -36,9 +34,7 @@
   }
 
   class ParentComp extends GameGUI.Component {
-    constructor () {
-      super();
-
+    afterInstantiation () {
       this.setState({
         ctr: 0
       });
@@ -46,24 +42,24 @@
 
     render () {
       return `
-        <div ui-click="handlerUpdateLabel">
+        <div gui-click="handlerUpdateLabel">
           Timestamp changing at ReRendering: ${Date.now()} <br>
           Click Me: ${this.getState().ctr}
         </div>
 
         <br>
-        <b>SubComp receiving NO data from parent</b> - Doesn't ReRender when Parent Comp chaned
+        <b>SubComp receiving NO data from parent</b> - Doesn't Re-Render when Parent Comp chaned
         ${this.include(MySubComp)}
 
         <b>SubComp receiving changing data from parent</b> - Rerenders when Parent Comp changed
         ${this.include(MySubComp, this.getState().ctr)}
 
-        <b>SubComp receiving static data from parent</b> - Doesn't ReRender when Parent Comp chaned - Deep Diff
+        <b>SubComp receiving static data from parent</b> - Doesn't Re-Render when Parent Comp chaned - Deep Diff
         ${this.include(MySubComp, 'ImStaticTextPassedIn')}
       `;
     }
 
-    // Ref in the DOM: <div ui-click="handlerUpdateLabel">
+    // Ref in the DOM: <div gui-click="handlerUpdateLabel">
     handlerUpdateLabel() {
       this.setState({
         ctr: this.getState().ctr + 1
@@ -71,7 +67,7 @@
     }
   }
 
-  const gui = new GameGUI.default(ParentComp, '#ui-root');
+  const gameGUI = new GameGUI.default(ParentComp, '#ui-root');
 </script>
 
   <br>

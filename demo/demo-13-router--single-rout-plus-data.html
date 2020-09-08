@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <style>
+    body {
+      background: #2f2f2f;
+      color: #ffd600;
+      font-family: monospace, verda;
+      font-size: 13px;
+    }
+
+    a {
+      color: #ff9f26;
+    }
+
+    a:visited {
+      color: #c86f25;
+    }
+  </style>
+</head>
+<body>
+<div id="ui-root"></div>
+<script src="../dist/GameGUI.js"></script>
+<script>
+  const SettingsAccount = (dataInHash) =>(`
+    This is Rout "settings/account",
+    name: ${dataInHash.name},
+    age: ${dataInHash.age},
+    ${dataInHash.foo ? 'foo' : 'no foo'}
+  `);
+
+  class MyRootComp extends GameGUI.Component {
+    render () {
+      return `
+        <center><h2>Routing Examples</h2></center>
+        <hr>
+
+        <h3>Single Rout and Data</h3>
+        <a href="#settings/account?name=Jane&age=22&foo">Go to Jane's Account</a> |
+        <a href="#settings/account?name=Joe&age=32">Go to Joe's Account</a>
+
+        <hr>
+        <h3>Corresponding Components Rendered below:</h3>
+        ${this.include(GameGUI.Rout, 'settings/account', SettingsAccount)}
+      `;
+    }
+  }
+
+  const gameGUI = new GameGUI.default(MyRootComp, '#ui-root');
+  GameGUI.router.init( gameGUI );
+</script>
+</body>
+</html>

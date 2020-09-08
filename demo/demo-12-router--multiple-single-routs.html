@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <style>
+    body {
+      background: #2f2f2f;
+      color: #ffd600;
+      font-family: monospace, verda;
+      font-size: 13px;
+    }
+
+    a {
+      color: #ff9f26;
+    }
+
+    a:visited {
+      color: #c86f25;
+    }
+  </style>
+</head>
+<body>
+<div id="ui-root"></div>
+<script src="../dist/GameGUI.js"></script>
+<script>
+  const SettingsAccount = () => `This is Rout "settings/account"`;
+  const SettingsGeneral = () => `This is Rout "settings/general"`;
+
+  class MyRootComp extends GameGUI.Component {
+    render () {
+      return `
+        <center><h2>Routing Examples</h2></center>
+        <hr>
+
+        <h3>Multiple Single Routs</h3>
+        <a href="#settings/account">Go to Settings / Account</a> |
+        <a href="#settings/general">Go to Settings / General</a>
+
+        <hr>
+        <h3>Corresponding Components Rendered below:</h3>
+        ${this.include(GameGUI.Rout, 'settings/account', SettingsAccount)}
+        ${this.include(GameGUI.Rout, 'settings/general', SettingsGeneral)}
+      `;
+    }
+  }
+
+  const gameGUI = new GameGUI.default(MyRootComp, '#ui-root');
+  GameGUI.router.init( gameGUI );
+</script>
+</body>
+</html>

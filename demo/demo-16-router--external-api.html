@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <style>
+    body {
+      background: #2f2f2f;
+      color: #ffd600;
+      font-family: monospace, verda;
+      font-size: 13px;
+    }
+
+    a {
+      color: #ff9f26;
+    }
+
+    a:visited {
+      color: #c86f25;
+    }
+  </style>
+</head>
+<body>
+<div id="ui-root"></div>
+<script src="../dist/GameGUI.js"></script>
+<script>
+  class CompRunning extends GameGUI.Component {
+    render (attrib) {
+      return `
+        This is rout "running" | ${attrib.user} age: ${attrib.age} </br>
+      `;
+    }
+  }
+
+  class MyComp extends GameGUI.Component {
+    render () {
+      return `
+        <center><h2>Routing Examples</h2></center>
+        <hr>
+
+        <a href="#running?user=Jane&age=20&foo">#running?user=Jane&age=20&foo</a> |
+        <a href="#some-other-rout">#some-other-rout</a><br>
+        <br>
+
+        <h3>Corresponding Components Rendered below:</h3>
+        ${this.include(GameGUI.Rout, 'running', CompRunning)}
+      `;
+    }
+  }
+
+  const gameGUI = new GameGUI.default(MyComp, '#ui-root');
+  GameGUI.router.init( gameGUI );
+
+  GameGUI.router.rout('running', attrib => {
+    console.log('"running" Rout fired for Subscriber using API, not Comp.', attrib);
+  }, attrib => {
+    console.log('"running" Rout Destructed for Subscriber using API, not Comp.', attrib);
+  });
+</script>
+</body>
+</html>

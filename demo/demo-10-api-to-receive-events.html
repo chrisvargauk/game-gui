@@ -9,9 +9,7 @@
 <script src="../dist/GameGUI.js"></script>
 <script>
   class MySubComp extends GameGUI.Component {
-    constructor (option, config) {
-      super(option, config);
-
+    afterInstantiation ( option, config, dataFromParent ) {
       this.setState({
         ctr: 0
       });
@@ -19,7 +17,7 @@
 
     render () {
       return `
-        <fieldset class="my-sub-comp" ui-click="handlerUpdateLabel">
+        <fieldset class="my-sub-comp" gui-click="handlerUpdateLabel">
           <legend>SubComp:</legend>
           Click me to rerender!<br>
           Clicked Me: ${this.getState().ctr} times
@@ -27,7 +25,7 @@
       `;
     }
 
-    // Ref in the DOM: <div ui-click="handlerUpdateLabel">
+    // Ref in the DOM: <div gui-click="handlerUpdateLabel">
     handlerUpdateLabel() {
       this.setState({
         ctr: this.getState().ctr + 1
@@ -49,12 +47,18 @@
     }
   }
 
-  const gui = new GameGUI.default(MyComp, '#ui-root');
-  gui.onRender(() => {
-    console.log('1st OnRender event handler called!');
+  const gameGUI = new GameGUI.default(MyComp, '#ui-root');
+
+  gameGUI.addEventListener('DOMContentReady', function ( eventType ) {
+    console.log('DOMContentReady Event Handler Called only after the very first rendering of all Comps are done.');
   });
-  gui.onRender(() => {
-    console.log('2nd OnRender event handler called!');
+
+  gameGUI.addEventListener('rendered', function ( eventType ) {
+    console.log('1st OnRender Event Handler called!');
+  });
+
+  gameGUI.addEventListener('rendered', function ( eventType ) {
+    console.log('2nd OnRender Event Handler called!');
   });
 </script>
 </body>
