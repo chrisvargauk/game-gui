@@ -13,5 +13,8 @@ module.exports = {
     filename: '[name].js',
   },
 
+  stats: {
+    warnings:false
+  },
   watch: true,
 };

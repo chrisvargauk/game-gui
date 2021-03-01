@@ -1,0 +1,2 @@
+- No error msg if Component is not extended with original Component from the lib
+- If there is an error, it is stuck in an infinite error loop
