@@ -1,5 +1,5 @@
 import { Component } from "./Component.js";
-import { router } from './Router.js';
+import { router } from './router.js';
 
 export class Rout extends Component {
   afterInstantiation ( path ) {
