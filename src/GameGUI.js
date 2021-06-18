@@ -73,6 +73,12 @@ export class GameGUI {
     this.rootComp.scheduleRendering = this.scheduleRendering.bind( this );
     this.rootComp.indexComp         = this.indexComp.bind( this );
     this.rootComp.listBindExternal  = this.listBindExternal;
+    this.rootComp.gameGUI           = this;
+
+    // Run Life Cycle Method if defined on Root Comp Instance
+    if  (typeof this.rootComp.afterInstantiation !== 'undefined') {
+      this.rootComp.afterInstantiation();
+    }
 
     // Index Root Comp
     // Root Comp is an Instance of Component, therefore it is indexed the same way as every other Comp Inst.
@@ -130,7 +136,7 @@ export class GameGUI {
     // Fire Event Listeners (if any)
     if( !this.isDOMContentReady ) {
       this.isDOMContentReady = true;
-      this.fireEventListener('DOMContentReady');
+      this.fireEventListener('DOMContentLoaded');
     }
     this.fireEventListener('rendered');
 

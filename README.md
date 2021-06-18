@@ -125,9 +125,7 @@ class MyComp extends Component {
 Use Smart Components if your UI element requires it's own state.
 ```javascript
 class MySmartComp extends Component {
-  constructor () {
-    super();
-
+  afterInstantiation () {
     this.setState({
       ctr: 0
     });
@@ -197,6 +195,7 @@ class MySmartComp extends Component {
 
 ---
 Use `gui.addEventListener(EventType, callback);` to register in as many Event Handlers as you like.
+Note: Game GUI instance is available in every Component as `this.gameGUI`.
 
 ##### "DOMContentLoaded" Event Handler
 `DOMContentLoaded` Event Handler is called after all the Components are rendered the very first time. 
@@ -205,6 +204,16 @@ It is meant to replace `DOMContentLoaded` DOM Event.
 gui.addEventListener('DOMContentLoaded', eventType => {
   //..
 });
+
+...or
+
+class MyComp extends Component {
+  afterInstantiation () {
+    this.gameGUI.addEventListener('DOMContentLoaded', eventType => {
+      //..
+    });
+  }
+}
 ```
 
 ##### "rendered" Event Handler
@@ -215,6 +224,16 @@ when all the rendering activity is complete and the UI is in it's final state.
 gui.addEventListener('rendered', eventType => {
   //..
 });
+
+...or
+
+class MyComp extends Component {
+  afterInstantiation () {
+    this.gameGUI.addEventListener('rendered', eventType => {
+      //..
+    });
+  }
+}
 ```
 
 ### Include Syntax in Details - dataFromParent, config, option
@@ -518,7 +537,7 @@ One way of interacting is to react to Links just like the UI/GUI does by utilizi
 In the UI you can use Routs to react to Links, 
 in a Game Engine, you can subscribe to Links:
 ```javascript
-router.rout('#game/state?do=this', dataInHash => {
+router.rout('game/state?do=this', dataInHash => {
   console.log('game/state fired for Subscriber using API, not Comp.', dataInHash.do);
 });
 ```
@@ -527,7 +546,7 @@ It's practical to get notified when the User navigates away from a Link you've s
 to do some clean up you may need. 
 This destructor callback will only be called if Link was already triggered, and only once per trigger.
 ```javascript
-router.rout('#game/state?do=this', dataInHash => {
+router.rout('game/state?do=this', dataInHash => {
   console.log('game/state fired for Subscriber using API, not Comp.', dataInHash.do);
 }, dataInHash => {
   console.log('game/state Destructor firing.', dataInHash.do);

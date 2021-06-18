@@ -14,18 +14,13 @@ export class Component {
     // Comp instantiation, but its content is created from scratch, then injected at
     // every Comp Render call - at this.render(..).
     this.listObjCompChildByType     = {}; // Cache previously rendered Comps here.
-    this.html                       = '';
+    this.html                       = null;
     this.ctrChildByType             = {};
 
     this.state                      = {};
     this.isStateUpdated             = false; // when Comp State is updated, this is set to true till
                                              // State Change is rendered to HTML/DOM
     this.dataFromParentAsStringPrev = undefined;
-
-    // Run Life Cycle Method if defined on Comp Instance
-    if  (typeof this.afterInstantiation !== 'undefined') {
-      this.afterInstantiation( dataFromParent );
-    }
   }
 
   getTypeOfComp ( comp ) {
@@ -93,10 +88,16 @@ export class Component {
         compChild.scheduleRendering = this.scheduleRendering;
         compChild.indexComp         = this.indexComp;
         compChild.listBindExternal  = this.listBindExternal;
+        compChild.gameGUI           = this.gameGUI;
 
         // Index Comp (by "type" and "id") for quick access, right after its created and even before its rendered.
         // Note: The rendering of Root Comp will trigger the indexing of all Sub Comps.
         this.indexComp( compChild );
+
+        // Run Life Cycle Method if defined on Comp Instance
+        if  (typeof compChild.afterInstantiation !== 'undefined') {
+          compChild.afterInstantiation( dataFromParent );
+        }
       }
 
       compChild.renderToHtmlAndDomify( dataFromParent );
@@ -125,7 +126,7 @@ export class Component {
 
     // Don't skip if HTML representation of Comp has never been rendered yet.
     // Skip only if Data Passed In From Parent Comp hasn't changed and the sate of the Comp hasn't changed either
-    if (this.html !== '' &&
+    if (this.html !== null &&
       !renderBecauseDataPassedInChanged &&
       !this.isStateUpdated
     ) {
@@ -153,6 +154,13 @@ export class Component {
 
     // DOMify HTML String
     this.dom.innerHTML = this.html;
+
+    // Hide Component - DOM Node included, if Component has nothing to render
+    if (this.html === '') {
+      this.dom.style.visibility = 'hidden';
+    } else {
+      this.dom.style.visibility = 'visible';
+    }
 
     // Bind Built in Event Handlers automatically right after DOM is ready
     this.doBindExternal();
